@@ -6,24 +6,37 @@ function process(d) {
 	//add numeric values
 	for( var i = 0; i < d.length; ++i ) {
 		var element = { dist: numericValue(d[i]), name : d[i].name};
-		var res = binaryFind.call(distances, element);
-		distances.splice(res, 0, element);
+		distances.push(element);
 	}
-
-	while(distances.length > 1) {
+	var p = 0;
+	while(distances.length > 1 && p < 15) {
+		var minDist = Number.MAX_VALUE;
+		var min_i;
+		var min_j;
+		for( var i = 0; i < distances.length; ++i ) {
+			for (var j = i+1; j < distances.length; ++j) {
+				dist = Math.abs(distances[j].dist - distances[i].dist);
+				if(dist < minDist) {
+					minDist = dist;
+					min_i = i;
+					min_j = j; 
+				}
+			}
+		}
 		//find closest
-		var closestA = distances[0];
-		var closestB = distances[1];
-		var avgDist =  (closestA.dist + closestB.dist)/2;
-		closestA["parent"] = "Node"+nodeCounter;
-		closestB["parent"] = "Node"+nodeCounter;
-		var newNode = {dist: avgDist, name: "Node"+nodeCounter, children: [closestA, closestB], parent:"null"};
+		minA = distances[min_i];
+		minB = distances[min_j];
+		distances.splice(min_i, 1);
+		distances.splice(min_j-1, 1);
+
+		var avgDist =  (minA.dist + minB.dist)/2;
+		minA["parent"] = "Node"+nodeCounter;
+		minB["parent"] = "Node"+nodeCounter;
+		var newNode = {dist: avgDist, name: "Node"+nodeCounter, children: [minA, minB], parent:"null"};
 		nodeCounter++;
 
 		//insert into array
-		var res = binaryFind.call(distances, newNode);
-		distances = distances.splice(2);
-		distances.splice(res, 0, newNode);
+		distances.push(newNode);
 
 		//save as root
 		root = newNode;
@@ -37,44 +50,4 @@ function numericValue(item) {
 		sum += item.data[i];
 	}
 	return sum;
-}
-
-function binaryFind(searchElement) {
-	'use strict';
-
-	var minIndex = 0;
-	var maxIndex = this.length - 1;
-	var currentIndex;
-	var currentElement;
-
-	if(this.length == 0) {
-		return 0;
-	}
-
-	while (minIndex <= maxIndex) {
-		currentIndex = (minIndex + maxIndex) / 2 | 0;
-		currentElement = this[currentIndex];
-
-		if (currentElement.dist < searchElement.dist) {
-			minIndex = currentIndex + 1;
-		}
-		else if (currentElement.dist > searchElement.dist) {
-			maxIndex = currentIndex - 1;
-		}
-		else {
-			return currentIndex
-		}
-	}      
-	return currentElement.dist < searchElement.dist ? currentIndex + 1 : currentIndex
-}
-
-function testOrder(d) {
-	var last = 0;
-	for(var i = 0; i < d.length; ++i ) {
-		var cur = d[i].dist;
-		if(cur < last)
-			return false;
-		last = cur;
-	}
-	return true;
 }
