@@ -2,50 +2,96 @@ var tree;
 var root;
 var height;
 var width;
+var selectedNode;
 
 window.onload = function () {
 	root = process(data);
 
 	// ************** Generate the tree diagram  *****************
+	// from example http://bl.ocks.org/mbostock/4339607
 	var width = 960,
-    height = 2200;
+	height = 2200;
 
-var cluster = d3.layout.cluster()
-    .size([height, width - 160]);
+	var radius = 960 / 2;
 
-var diagonal = d3.svg.diagonal()
-    .projection(function(d) { return [d.y, d.x]; });
+	var cluster = d3.layout.cluster()
+		.size([360, radius - 120]);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height)
-  .append("g")
-    .attr("transform", "translate(40,0)");
+	var diagonal = d3.svg.diagonal.radial()
+		.projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
 
-  var nodes = cluster.nodes(root),
-      links = cluster.links(nodes);
+	var svg = d3.select("body").append("svg")
+		.attr("width", radius * 2)
+		.attr("height", radius * 2)
+	.append("g")
+		.attr("transform", "translate(" + radius + "," + radius + ")");
 
-  var link = svg.selectAll(".link")
-      .data(links)
-    .enter().append("path")
-      .attr("class", "link")
-      .attr("d", diagonal);
+	var nodes = cluster.nodes(root);
 
-  var node = svg.selectAll(".node")
-      .data(nodes)
-    .enter().append("g")
-      .attr("class", "node")
-      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+	var link = svg.selectAll("path.link")
+		.data(cluster.links(nodes))
+	.enter().append("path")
+		.attr("class", "link")
+		.attr("d", diagonal);
 
-  node.append("circle")
-      .attr("r", 4.5);
+	var node = svg.selectAll("g.node")
+		.data(nodes)
+	.enter().append("g")
+		.on("click", clickNode)
+		.attr("class", "node")
+		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 
-  node.append("text")
-      .attr("dx", function(d) { return d.children ? -8 : 8; })
-      .attr("dy", 3)
-      .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-      .text(function(d) { return d.name; });
+	node.append("circle")
+		.attr("r", 4.5);
 
-d3.select(self.frameElement).style("height", height + "px");
+	node.append("text")
+		.attr("dy", ".31em")
+		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
+		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
+		.text(function(d) { return d.name; });
+
+	d3.select(self.frameElement).style("height", radius * 2 + "px");
 }
 
+function clickNode(node) {
+	if(selectedNode == node) {
+		selectedNode = null;
+		 d3.selectAll("path.link").transition().style("stroke-opacity", 1)
+		.style("stroke-width", 1.5);
+	} else {
+		selectedNode = node;
+		//fade all elements
+		var nodesToShow = getAllParentNodes(node);
+	    d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
+			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 1 : 0.3;
+		})
+		.style("stroke-width", function(o) {
+			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 4 : 1.5;
+		});
+	}
+}
+
+function getAllParentNodes(node) {
+	var nodesToShow = [];
+	var toVisit = [node];
+	while(toVisit.length > 0) {
+		var cur = toVisit.pop();
+		nodesToShow.push(cur);
+		console.log("adding " + cur.name);
+		if(cur.parent != "null") {
+			console.log("  --toVisit " + cur.parent.name);
+			toVisit.push(cur.parent);
+		}
+	}
+	return nodesToShow;
+}
+
+function contains(a, obj) {
+    var i = a.length;
+    while (i--) {
+       if (a[i] === obj) {
+           return true;
+       }
+    }
+    return false;
+}

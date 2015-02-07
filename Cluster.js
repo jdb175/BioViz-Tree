@@ -8,7 +8,7 @@ function process(d) {
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
-		var node = { dist: numericValue(d[i]), name : d[i].name, parent : "null"};
+		var node = { num: numericValue(d[i]), name : d[i].name, parent : "null"};
 		parentlessNodes.push(node);
 	}
 	var p = 0;
@@ -26,7 +26,7 @@ function process(d) {
 				//get distance between current comparator nodes
 				var n_i = parentlessNodes[i];
 				var n_j = parentlessNodes[j];
-				dist = Math.abs(n_i.dist - n_j.dist);
+				dist = Math.abs(n_i.num - n_j.num);
 
 				//first we handle adding children to existing equivalent parents
 				//if there is no distance. In these cases we just add the node as
@@ -61,7 +61,7 @@ function process(d) {
 		var avgDist =  (node_i.dist + node_j.dist)/2;
 		node_i["parent"] = "Node"+nodeCounter;
 		node_j["parent"] = "Node"+nodeCounter;
-		var newNode = {dist: avgDist, name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};
+		var newNode = {num: avgDist, name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};
 		nodeCounter++;
 
 		//insert into array
