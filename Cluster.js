@@ -5,7 +5,7 @@ function process(d) {
 
 	//add numeric values
 	for( var i = 0; i < d.length; ++i ) {
-		var element = { dist: numericValue(d[i]), name : d[i].name};
+		var element = { dist: numericValue(d[i]), name : d[i].name, parent : "null"};
 		distances.push(element);
 	}
 	var p = 0;
@@ -16,7 +16,15 @@ function process(d) {
 		for( var i = 0; i < distances.length; ++i ) {
 			for (var j = i+1; j < distances.length; ++j) {
 				dist = Math.abs(distances[j].dist - distances[i].dist);
-				if(dist < minDist) {
+				if(dist == 0 && distances[j].children != null) {
+					distances[i].parent = distances[j].name;
+					distances[j].children.push(distances[i]);
+					distances.splice(i, 1);
+				} else if(dist == 0 && distances[i].children != null) {
+					distances[j].parent = distances[i].name;
+					distances[i].children.push(distances[j]);
+					distances.splice(j, 1);
+				} else if(dist < minDist) {
 					minDist = dist;
 					min_i = i;
 					min_j = j; 
