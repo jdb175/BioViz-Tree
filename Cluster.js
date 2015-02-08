@@ -9,7 +9,7 @@ function process(d) {
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
-		var node = { num: numericValue(d[i]), name : d[i].name, parent : "null", data:d[i].data};
+		var node = { name : d[i].name, parent : "null", values:d[i].data};
 		parentlessNodes.push(node);
 		allNodes.push(node);
 	}
@@ -29,7 +29,7 @@ function process(d) {
 				//get distance between current comparator nodes
 				var n_i = parentlessNodes[i];
 				var n_j = parentlessNodes[j];
-				dist = Math.abs(n_i.num - n_j.num);
+				dist = distance(n_i, n_j);
 
 				if(dist < minDist) {
 					minDist = dist;
@@ -45,11 +45,14 @@ function process(d) {
 		parentlessNodes.splice(index_i, 1);
 		parentlessNodes.splice(index_j-1, 1);
 
-		//create a parent node with their average distance
-		var avgDist =  (node_i.num + node_j.num)/2;
+		//create a parent node with their average values
+		if(nodeCounter == 47) {
+			console.log(node_i);
+			console.log(node_j);
+		}
 		node_i["parent"] = "Node"+nodeCounter;
 		node_j["parent"] = "Node"+nodeCounter;
-		var newNode = {num: avgDist, name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};
+		var newNode = { values: average(node_i, node_j), name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};
 		nodeCounter++;
 
 		//insert into array
@@ -62,39 +65,53 @@ function process(d) {
 
 	//The second pass combines equivalent children and compresses
 	//chains of single equivalent children and parents
+	//We use a closure algorithm, so track changes
 	var changes = 1;
 	while(changes > 0) {
 		changes = 0;
+		//Iterate over every node
 		for( var i = 0; i < allNodes.length; ++i ) {
 			curNode = allNodes[i];
+			//If it has no children, ignore it (since children have no
+			//reference back to their parents leaves are useless)
 			if(curNode.children == null)
 				continue;
+
+			//If it has only one child, this node is a candidate for compression
+			//if it is the same as its child
 			if(curNode.children.length == 1) {
-				var dist = Math.abs(curNode.num - curNode.children[0].num);
+				var dist = distance(curNode, curNode.children[0]);
 				if(dist == 0) {
 					curNode.children = curNode.children[0].children;
 					changes++;
 				}
 			} else {
+				//Otherwise iterate through all pairs of children
 				for(var j = 0; j < curNode.children.length-1; j++) {
 					for(var k = j+1; k < curNode.children.length; k++) {
 						var n_j = curNode.children[j];
 						var n_k = curNode.children[k];
 
-						var dist = Math.abs(n_j.num - n_k.num);
+						//If the children are the same, we combine them
+						var dist = distance(n_j, n_k);
 						if(dist == 0) {
 							if(n_j.children != null) {
+								//if both are branches, combine their children and delete
+								//the other branch
 								if(n_k.children != null) {
 									curNode.children.splice(k, 1);
 									n_j.children = n_j.children.concat(n_k.children);
 									k--;
 									changes++;
+								//if one is a leaf, add it as a child of this branch
 								} else {
 									curNode.children.splice(k, 1);
 									k--;
 									n_j.children.push(n_k);
 									changes++;
 								}
+							//if both are branches, combine their children and delete
+							//the other branch
 							} else if (n_k.children != null) {
 								curNode.children.splice(j, 1);
 								j--;
@@ -111,10 +128,26 @@ function process(d) {
 	return root;
 }
 
-function numericValue(item) {
+/*
+	Returns an array consisting of the averages of the values from 
+	the data arrays of nodes a and b.
+*/
+function average(a, b) {
+	var data = [];
+	var use_a = false;
+	for(var i = 0; i < a.values.length; ++i){
+		data.push((Number(a.values[i])+Number(b.values[i]))/2);
+	}
+	return data;
+}
+
+/*
+	Returns the distance between nodes and and b
+*/
+function distance(a, b) {
 	var sum = 0;
-	for(var i = 0; i < item.data.length; ++i){
-		sum += item.data[i];
+	for(var i = 0; i < a.values.length; ++i){
+		sum+= Math.abs(Number(a.values[i])-Number(b.values[i]));
 	}
 	return sum;
 }

@@ -62,7 +62,7 @@ function updateTree(newRoot) {
 	//Handle nodes
 	var node = svg.selectAll("g.node")
 		.moveToFront()
-		.data(nodes, function(d) { return d.name + "-" + (d.parent ? d.parent.name : "root");});
+		.data(nodes, function(d) { return d.name + d.data + "-" + (d.parent ? d.parent.name : "root");});
 
 	//Apply Basic Styles
 	var enter = node.enter()
@@ -88,8 +88,8 @@ function updateTree(newRoot) {
 	//Apply branch styles
 	enter.filter(function(d) { return d.children!=null; })
 		.on({
-			"click": clickNode,
-			"mouseover": hoverNode,
+			"click": clickLeaf,
+			"mouseover": hoverLeaf,
 			"mouseout": hoverOff
 		});
 
@@ -134,7 +134,7 @@ function clickLeaf(node) {
 		selectedNode = node;
 		selectedD3 = d3.select(this);
 		highlightPathSubsetWithColor(getAllParentNodes(node));
-		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
+		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
 		document.getElementById("Node2").innerHTML = "";
 		document.getElementById("Distance").innerHTML = "";
 	}	
@@ -148,11 +148,11 @@ function clickLeaf(node) {
 function hoverLeaf(node) {
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node));
-		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.data;
+		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.values;
 	} else if(selectedNode != node) {
-		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + Math.abs(node.num - selectedNode.num);
-		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
-		document.getElementById("Node2").innerHTML = "<em>" + node.name + "</em> : " + node.data;
+		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + distance(node, selectedNode);
+		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
+		document.getElementById("Node2").innerHTML = "<em>" + node.name + "</em> : " + node.values;
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
 	}
 }
