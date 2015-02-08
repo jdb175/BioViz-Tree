@@ -3,7 +3,6 @@ var root;
 var height;
 var width;
 var selectedNode;
-var shiftSelectedNode;
 
 window.onload = function () {
 	root = process(data);
@@ -38,56 +37,68 @@ window.onload = function () {
 	var node = svg.selectAll("g.node")
 		.data(nodes)
 	.enter().append("g")
-		.on("click", clickNode)
-		.attr("class", "node")
+		.attr("class", function(d) { return d["parent"]=="null" ? "root" : "node" })
 		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 
 	node.append("circle")
 		.attr("r", 4.5);
 
-	node.append("text")
+	node.filter(function(d) { return d.children==null; })
+		.on("click", clickNode)
+		.on("mouseover", hoverNode)
+		.on("mouseout", hoverOff)
+		.append("text")
 		.attr("dy", ".31em")
 		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
 		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
 		.text(function(d) { return d.name; });
 
+
 	d3.select(self.frameElement).style("height", radius * 2 + "px");
 }
 
 function clickNode(node) {
-	var nodesToShow;
-	var color;
-	if (d3.event.shiftKey && (selectedNode != null || shiftSelectedNode != null)) {
-		if(selectedNode == null){
-			selectedNode = shiftSelectedNode;
-		}
-		shiftSelectedNode = node;
-		nodesToShow=getClosestConnection(selectedNode, shiftSelectedNode);
-		color = "red";
-    } else {
-    	shiftSelectedNode = null;
-		if(selectedNode == node) {
-			selectedNode = null;
-			d3.selectAll("path.link").transition().style("stroke-opacity", 1)
-				.style("stroke", "#ccc")
-				.style("stroke-width", 1.5);
-			return;
-		} else {
-			selectedNode = node;
-			nodesToShow = getAllParentNodes(node);
-			color = "steelblue";
-		}
-	}
+	if(selectedNode == node) {
+		selectedNode = null;
+		resetPathHighlighting();
+	} else {
+		selectedNode = node;
+		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
+	}	
+}
 
+function hoverNode(node) {
+	if(selectedNode == null) {
+		highlightPathSubsetWithColor(getAllParentNodes(node), "lightsteelblue");
+	} else if(selectedNode != node) {
+		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
+	}
+}
+
+function hoverOff(node) {
+	if(selectedNode == null) {
+		resetPathHighlighting();
+	} else {
+		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue");
+	}
+}
+
+function highlightPathSubsetWithColor(set, color) {
 	d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
-		return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 1 : 0.3;
+		return contains(set, o.source) && contains(set, o.target) ? 1 : 0.3;
 	})
 	.style("stroke-width", function(o) {
-		return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 4 : 1.5;
+		return contains(set, o.source) && contains(set, o.target) ? 4 : 1.5;
 	})
 	.style("stroke", function(o) {
-			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? color : "#ccc";}
-		);
+		return contains(set, o.source) && contains(set, o.target) ? color : "#ccc";}
+	);
+}
+
+function resetPathHighlighting() {
+	d3.selectAll("path.link").transition().style("stroke-opacity", 1)
+		.style("stroke", "#ccc")
+		.style("stroke-width", 1.5);
 }
 
 function getClosestConnection(node, node2) {
