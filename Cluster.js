@@ -4,15 +4,18 @@
 function process(d) {
 	var nodeCounter = 0; //how many nodes we've creates (for naming)
 	var parentlessNodes = []; 
+	var allNodes = [];
 	var root = null;
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
 		var node = { num: numericValue(d[i]), name : d[i].name, parent : "null"};
 		parentlessNodes.push(node);
+		allNodes.push(node);
 	}
-	var p = 0;
-	while(parentlessNodes.length > 1 && p < 15) {
+
+	//Then the first pass of the algorithm creates the simple binary tree of closest nodes
+	while(parentlessNodes.length > 1) {
 		var minDist = Number.MAX_VALUE;
 		var index_i; //the closest index from 'i' loop
 		var index_j; //the closest index from 'j' loop
@@ -20,7 +23,7 @@ function process(d) {
 		var node_j; //the closest node from 'j' loop
 
 		//loop through all parentless nodes
-		for( var i = 0; i < parentlessNodes.length; ++i ) {
+		for( var i = 0; i < parentlessNodes.length-1; ++i ) {
 			//and compare to all other parentless nodes
 			for (var j = i+1; j < parentlessNodes.length; ++j) {
 				//get distance between current comparator nodes
@@ -28,22 +31,7 @@ function process(d) {
 				var n_j = parentlessNodes[j];
 				dist = Math.abs(n_i.num - n_j.num);
 
-				//first we handle adding children to existing equivalent parents
-				//if there is no distance. In these cases we just add the node as
-				//a child and remove it, without having to change the looping
-				//aside from decrementing a counter due to element removal
-				if(dist == 0 && n_j.children != null) {
-					n_i.parent = n_j.name;
-					n_j.children.push(n_i);
-					parentlessNodes.splice(i, 1);
-					i--;
-				} else if(dist == 0 && n_i.children != null) {
-					n_j.parent = n_i.name;
-					n_i.children.push(n_j);
-					parentlessNodes.splice(j, 1);
-					j--;
-				//otherwise we compare to see the closest pair to combine
-				} else if(dist < minDist) {
+				if(dist < minDist) {
 					minDist = dist;
 					index_i = i;
 					index_j = j; 
@@ -66,10 +54,62 @@ function process(d) {
 
 		//insert into array
 		parentlessNodes.push(newNode);
+		allNodes.push(newNode);
 
 		//save as current best guess at root
 		root = newNode;
 	}
+
+	//The second pass combines equivalent children and compresses
+	//chains of single equivalent children and parents
+	var changes = 1;
+	while(changes > 0) {
+	changes = 0;
+	for( var i = 0; i < allNodes.length; ++i ) {
+		curNode = allNodes[i];
+		if(curNode.children == null)
+			continue;
+		if(curNode.children.length == 1) {
+			var dist = Math.abs(curNode.num - curNode.children[0].num);
+			if(dist == 0) {
+				curNode.children = curNode.children[0].children;
+				changes++;
+			}
+		} else {
+			for(var j = 0; j < curNode.children.length-1; j++) {
+				for(var k = j+1; k < curNode.children.length; k++) {
+					var n_j = curNode.children[j];
+					var n_k = curNode.children[k];
+
+					var dist = Math.abs(n_j.num - n_k.num);
+					if(dist == 0) {
+						if(n_j.children != null) {
+							if(n_k.children != null) {
+								curNode.children.splice(k, 1);
+								n_j.children = n_j.children.concat(n_k.children);
+								k--;
+								changes++;
+								console.log(changes);
+							} else {
+								curNode.children.splice(k, 1);
+								k--;
+								n_j.children.push(n_k);
+								changes++;
+							}
+						} else if (n_k.children != null) {
+							curNode.children.splice(j, 1);
+							j--;
+							n_k.children.push(n_j);
+							changes++;
+						}
+					}
+				}
+			}
+		}
+	}
+	console.log(changes);
+	}
+
 	return root;
 }
 

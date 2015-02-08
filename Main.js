@@ -7,15 +7,15 @@ window.onload = function () {
 
 	// ************** Generate the tree diagram  *****************
 	// from example http://bl.ocks.org/mbostock/4339607
-	var radius = 960 / 2;
+	var radius = 800 / 2;
 
 	var cluster = d3.layout.cluster()
-		.size([360, radius - 120]);
+		.size([360, radius - 80]);
 
 	var diagonal = d3.svg.diagonal.radial()
 		.projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
 
-	var svg = d3.select("body").append("svg")
+	var svg = d3.select("svg")
 		.attr("width", radius * 2)
 		.attr("height", radius * 2)
 
@@ -41,7 +41,6 @@ window.onload = function () {
 	var node = svg.selectAll("g.node")
 		.data(nodes)
 	.enter().append("g")
-		.on("click", clickSvg)
 		.attr("class", function(d) { return d["parent"]=="null" ? "root" : "node" })
 		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 
@@ -92,6 +91,7 @@ function hoverLeaf(node) {
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node), "lightsteelblue");
 	} else if(selectedNode != node) {
+		document.getElementById("Distance").innerHTML = "Distance : " + Math.abs(node.num - selectedNode.num);
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
 	}
 }
@@ -100,6 +100,7 @@ function hoverLeaf(node) {
 	When exiting hover reset to the state before the hover
 */
 function hoverOff(node) {
+	document.getElementById("Distance").innerHTML = "";
 	if(selectedNode == null) {
 		resetPathHighlighting();
 	} else {
