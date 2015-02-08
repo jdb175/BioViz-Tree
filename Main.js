@@ -91,14 +91,22 @@ function clickNode(node) {
 }
 
 function getClosestConnection(node, node2) {
+	//first get the parents of each node
 	var parents1 = getAllParentNodes(node);
 	var parents2 = getAllParentNodes(node2);
 
+	//We will return the symmetric difference of both parent sets, plus the closest mutual parent
+	//this will be the shortest path between them
+
+	//first get the closest mutual parent
 	var sharedParents = parents1.filter(function(obj){ return contains(parents2, obj);});
 	sharedParents = sharedParents.filter(function(obj) { return !containsAny(obj.children, sharedParents)} )
 	
+	//then get the symmetric difference, which is the union of the complements
 	var ret1 = parents1.filter(function(obj){ return !contains(parents2, obj)});
 	var ret2 = parents2.filter(function(obj){ return !contains(parents1, obj)});
+
+	//concatenate the complements and the shared parent
 	return ret1.concat(ret2).concat(sharedParents);
 }
 
