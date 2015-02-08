@@ -9,7 +9,7 @@ function process(d) {
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
-		var node = { num: numericValue(d[i]), name : d[i].name, parent : "null"};
+		var node = { num: numericValue(d[i]), name : d[i].name, parent : "null", data:d[i].data};
 		parentlessNodes.push(node);
 		allNodes.push(node);
 	}
@@ -64,50 +64,48 @@ function process(d) {
 	//chains of single equivalent children and parents
 	var changes = 1;
 	while(changes > 0) {
-	changes = 0;
-	for( var i = 0; i < allNodes.length; ++i ) {
-		curNode = allNodes[i];
-		if(curNode.children == null)
-			continue;
-		if(curNode.children.length == 1) {
-			var dist = Math.abs(curNode.num - curNode.children[0].num);
-			if(dist == 0) {
-				curNode.children = curNode.children[0].children;
-				changes++;
-			}
-		} else {
-			for(var j = 0; j < curNode.children.length-1; j++) {
-				for(var k = j+1; k < curNode.children.length; k++) {
-					var n_j = curNode.children[j];
-					var n_k = curNode.children[k];
+		changes = 0;
+		for( var i = 0; i < allNodes.length; ++i ) {
+			curNode = allNodes[i];
+			if(curNode.children == null)
+				continue;
+			if(curNode.children.length == 1) {
+				var dist = Math.abs(curNode.num - curNode.children[0].num);
+				if(dist == 0) {
+					curNode.children = curNode.children[0].children;
+					changes++;
+				}
+			} else {
+				for(var j = 0; j < curNode.children.length-1; j++) {
+					for(var k = j+1; k < curNode.children.length; k++) {
+						var n_j = curNode.children[j];
+						var n_k = curNode.children[k];
 
-					var dist = Math.abs(n_j.num - n_k.num);
-					if(dist == 0) {
-						if(n_j.children != null) {
-							if(n_k.children != null) {
-								curNode.children.splice(k, 1);
-								n_j.children = n_j.children.concat(n_k.children);
-								k--;
-								changes++;
-								console.log(changes);
-							} else {
-								curNode.children.splice(k, 1);
-								k--;
-								n_j.children.push(n_k);
+						var dist = Math.abs(n_j.num - n_k.num);
+						if(dist == 0) {
+							if(n_j.children != null) {
+								if(n_k.children != null) {
+									curNode.children.splice(k, 1);
+									n_j.children = n_j.children.concat(n_k.children);
+									k--;
+									changes++;
+								} else {
+									curNode.children.splice(k, 1);
+									k--;
+									n_j.children.push(n_k);
+									changes++;
+								}
+							} else if (n_k.children != null) {
+								curNode.children.splice(j, 1);
+								j--;
+								n_k.children.push(n_j);
 								changes++;
 							}
-						} else if (n_k.children != null) {
-							curNode.children.splice(j, 1);
-							j--;
-							n_k.children.push(n_j);
-							changes++;
 						}
 					}
 				}
 			}
 		}
-	}
-	console.log(changes);
 	}
 
 	return root;

@@ -76,9 +76,15 @@ function clickLeaf(node) {
 	if(selectedNode == node) {
 		selectedNode = null;
 		resetPathHighlighting();
+		document.getElementById("Node1").innerHTML = "";
+		document.getElementById("Node2").innerHTML = "";
+		document.getElementById("Distance").innerHTML = "";
 	} else {
 		selectedNode = node;
 		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
+		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
+		document.getElementById("Node2").innerHTML = "";
+		document.getElementById("Distance").innerHTML = "";
 	}	
 }
 
@@ -90,8 +96,11 @@ function clickLeaf(node) {
 function hoverLeaf(node) {
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node), "lightsteelblue");
+		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.data;
 	} else if(selectedNode != node) {
-		document.getElementById("Distance").innerHTML = "Distance : " + Math.abs(node.num - selectedNode.num);
+		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + Math.abs(node.num - selectedNode.num);
+		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
+		document.getElementById("Node2").innerHTML = "<em>" + node.name + "</em> : " + node.data;
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
 	}
 }
@@ -101,7 +110,10 @@ function hoverLeaf(node) {
 */
 function hoverOff(node) {
 	document.getElementById("Distance").innerHTML = "";
+	document.getElementById("Node2").innerHTML = "";
+
 	if(selectedNode == null) {
+		document.getElementById("Node1").innerHTML = "";
 		resetPathHighlighting();
 	} else {
 		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue");
