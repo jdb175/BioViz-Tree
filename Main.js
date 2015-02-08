@@ -1,22 +1,31 @@
 var tree;
-var root;
 var selectedNode;
 var selectedD3;
+var svg;
+var cluster;
+var diagonal;
+var root;
+var radius = 800 / 2;
+
+d3.selection.prototype.moveToFront = function() {
+return this.each(function(){
+this.parentNode.appendChild(this);
+});
+};
 
 window.onload = function () {
 	root = process(data);
 
 	// ************** Generate the tree diagram  *****************
 	// from example http://bl.ocks.org/mbostock/4339607
-	var radius = 800 / 2;
 
-	var cluster = d3.layout.cluster()
+	cluster = d3.layout.cluster()
 		.size([360, radius - 80]);
 
-	var diagonal = d3.svg.diagonal.radial()
+	diagonal = d3.svg.diagonal.radial()
 		.projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
 
-	var svg = d3.select("svg")
+	svg = d3.select("svg")
 		.attr("width", radius * 2)
 		.attr("height", radius * 2)
 
@@ -31,26 +40,39 @@ window.onload = function () {
     svg = svg.append("g")
 		.attr("transform", "translate(" + radius + "," + radius + ")");
 
+	updateTree(root);
+}
+
+function updateTree(root) {
 	var nodes = cluster.nodes(root);
 
+	//handle links
+	svg.selectAll(".link").remove();
+
 	var link = svg.selectAll("path.link")
-		.data(cluster.links(nodes))
-	.enter().append("path")
+		.data(cluster.links(nodes));
+	link.enter().append("path")
 		.attr("class", "link")
-		.attr("d", diagonal);
+		.attr("d", diagonal)
+		.attr("opacity", 0)
+		.transition()
+		.attr("opacity", 1);
 
+	//Handle nodes
 	var node = svg.selectAll("g.node")
-		.data(nodes)
-	.enter().append("g")
-		.attr("class", function(d) { return d["parent"]=="null" ? "root" : "node" })
-		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+		.moveToFront()
+		.data(nodes, function(d) { return d.name + "-" + (d.parent ? d.parent.name : "root");});
 
-	node.append("circle")
+	//Apply Basic Styles
+	var enter = node.enter()
+		.append("g");
+	enter
+		.append("circle")
 		.attr("r", 4.5);
 
 	//Apply leaf styles
-	node.filter(function(d) { return d.children==null; })
-		.attr("class", "leaf")
+	enter.filter(function(d) { return d.children==null; })
+		.attr("class", "node leaf")
 		.on({
 			"click": clickLeaf,
 			"mouseover": hoverLeaf,
@@ -60,13 +82,32 @@ window.onload = function () {
 		.attr("dy", ".31em")
 		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
 		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
-		.text(function(d) { return d.name; });
+		.text(function(d) { return d.name; });;
+
+	//Apply branch styles
+	enter.filter(function(d) { return d.children!=null; })
+		.attr("class", function(d) { return d==root ? "node root" : "branch node" })
+		.on("click", clickNode);
+
+	//Apply positions for all nodes
+	node.transition().attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	
+	//Remove old
+	node.exit().remove();
 
 
 	d3.select(self.frameElement).style("height", radius * 2 + "px");
 }
 
 /********* LISTENERS *********/
+
+/*
+	When a branch node is clicked, recreate the tree with that node as root
+*/
+function clickNode(node) {
+	updateTree(node);
+	document.getElementById("BackToRoot").setAttribute("active", true);
+}
 
 /* 
 	When a leaf is clicked, highlight the path to that node from the root,
@@ -128,6 +169,14 @@ function hoverOff(node) {
 function clickSvg(node) {
 	selectedNode = null;
 	resetPathHighlighting();
+}
+
+/*
+	The back to root button resets the tree centered at the root
+*/
+function pressBackToRoot() {
+	updateTree(root);
+	document.getElementById("BackToRoot").setAttribute("active", false);
 }
 
 /********* UTILITIES *********/
