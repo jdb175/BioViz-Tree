@@ -58,7 +58,7 @@ function process(d) {
 		parentlessNodes.splice(index_j-1, 1);
 
 		//create a parent node with their average distance
-		var avgDist =  (node_i.dist + node_j.dist)/2;
+		var avgDist =  (node_i.num + node_j.num)/2;
 		node_i["parent"] = "Node"+nodeCounter;
 		node_j["parent"] = "Node"+nodeCounter;
 		var newNode = {num: avgDist, name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};

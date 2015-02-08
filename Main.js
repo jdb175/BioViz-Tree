@@ -1,7 +1,5 @@
 var tree;
 var root;
-var height;
-var width;
 var selectedNode;
 
 window.onload = function () {
@@ -9,9 +7,6 @@ window.onload = function () {
 
 	// ************** Generate the tree diagram  *****************
 	// from example http://bl.ocks.org/mbostock/4339607
-	var width = 960,
-	height = 2200;
-
 	var radius = 960 / 2;
 
 	var cluster = d3.layout.cluster()
@@ -23,7 +18,16 @@ window.onload = function () {
 	var svg = d3.select("body").append("svg")
 		.attr("width", radius * 2)
 		.attr("height", radius * 2)
-	.append("g")
+
+	//add click plane for deselecting
+	svg.append("rect")
+        .attr({"class": "overlay" , "width": radius*2 , "height": radius*2})
+        .attr("opacity", 0)
+        .on({
+          "click": clickSvg, 
+        });
+
+    svg = svg.append("g")
 		.attr("transform", "translate(" + radius + "," + radius + ")");
 
 	var nodes = cluster.nodes(root);
@@ -37,16 +41,21 @@ window.onload = function () {
 	var node = svg.selectAll("g.node")
 		.data(nodes)
 	.enter().append("g")
+		.on("click", clickSvg)
 		.attr("class", function(d) { return d["parent"]=="null" ? "root" : "node" })
 		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 
 	node.append("circle")
 		.attr("r", 4.5);
 
+	//Apply leaf styles
 	node.filter(function(d) { return d.children==null; })
-		.on("click", clickNode)
-		.on("mouseover", hoverNode)
-		.on("mouseout", hoverOff)
+		.attr("class", "leaf")
+		.on({
+			"click": clickLeaf,
+			"mouseover": hoverLeaf,
+			"mouseout": hoverOff
+		})
 		.append("text")
 		.attr("dy", ".31em")
 		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
@@ -57,7 +66,14 @@ window.onload = function () {
 	d3.select(self.frameElement).style("height", radius * 2 + "px");
 }
 
-function clickNode(node) {
+/********* LISTENERS *********/
+
+/* 
+	When a leaf is clicked, highlight the path to that node from the root,
+	or deselect it if we clicked the selected node
+ */
+function clickLeaf(node) {
+	d3.event.stopPropagation();
 	if(selectedNode == node) {
 		selectedNode = null;
 		resetPathHighlighting();
@@ -67,7 +83,12 @@ function clickNode(node) {
 	}	
 }
 
-function hoverNode(node) {
+/*
+	When hovering on a leaf, either lightly highlight the path to the node
+	(if no node is selected), or highlight the shorest path between the hovered
+	node and the selected node (if a node is selected)
+*/
+function hoverLeaf(node) {
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node), "lightsteelblue");
 	} else if(selectedNode != node) {
@@ -75,6 +96,9 @@ function hoverNode(node) {
 	}
 }
 
+/*
+	When exiting hover reset to the state before the hover
+*/
 function hoverOff(node) {
 	if(selectedNode == null) {
 		resetPathHighlighting();
@@ -83,6 +107,20 @@ function hoverOff(node) {
 	}
 }
 
+/*
+	When the background is clicked, deselect any selected leaf node
+*/
+function clickSvg(node) {
+	selectedNode = null;
+	resetPathHighlighting();
+}
+
+/********* UTILITIES *********/
+
+/*
+	Highlights connections between nodes in the given set to be bolder, and
+	the given color. Connections including nodes not in the set are faded out.
+*/
 function highlightPathSubsetWithColor(set, color) {
 	d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? 1 : 0.3;
@@ -95,12 +133,19 @@ function highlightPathSubsetWithColor(set, color) {
 	);
 }
 
+/*
+	Resets all connections to their default style
+*/
 function resetPathHighlighting() {
 	d3.selectAll("path.link").transition().style("stroke-opacity", 1)
 		.style("stroke", "#ccc")
 		.style("stroke-width", 1.5);
 }
 
+/*
+	Returns all nodes constituting the shortest connecting path
+	between the two given nodes
+*/
 function getClosestConnection(node, node2) {
 	//first get the parents of each node
 	var parents1 = getAllParentNodes(node);
@@ -121,6 +166,10 @@ function getClosestConnection(node, node2) {
 	return ret1.concat(ret2).concat(sharedParents);
 }
 
+/*
+	Returns all nodes in the direct path from the root
+	to the given node.
+*/
 function getAllParentNodes(node) {
 	var nodesToShow = [];
 	var toVisit = [node];
@@ -134,6 +183,10 @@ function getAllParentNodes(node) {
 	return nodesToShow;
 }
 
+/*
+	Returns whether array a contains any elements
+	from array b
+*/
 function containsAny(a, b) {
 	 var i = b.length;
     while (i--) {
@@ -144,6 +197,10 @@ function containsAny(a, b) {
     return false;
 }
 
+/*
+	returns whether array a contains the given
+	object
+*/
 function contains(a, obj) {
     var i = a.length;
     while (i--) {
