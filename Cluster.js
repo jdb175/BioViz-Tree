@@ -1,33 +1,30 @@
 /*
-	Take the given JSON data and process it into a tree
+	Take the given JSON data and process it into a clustered tree
 */
+var nodeCounter = 0; //how many nodes we've creates (for naming)
+var parentlessNodes = []; 
+var root = null;
+
 function process(d) {
-	var nodeCounter = 0; //how many nodes we've creates (for naming)
-	var parentlessNodes = []; 
-	var allNodes = [];
-	var root = null;
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
-		var node = { name : d[i].name, parent : "null", values:d[i].data};
+		var node = { name : d[i].name, parent : "null", values:d[i].data.slice(), shared: d[i].data.slice()};
 		parentlessNodes.push(node);
-		allNodes.push(node);
 	}
 
-	//Then the first pass of the algorithm creates the simple binary tree of closest nodes
 	while(parentlessNodes.length > 1) {
 		var minDist = Number.MAX_VALUE;
 		var index_i; //the closest index from 'i' loop
 		var index_j; //the closest index from 'j' loop
-		var node_i; //the closest node from 'i' loop
-		var node_j; //the closest node from 'j' loop
 
 		//loop through all parentless nodes
 		for( var i = 0; i < parentlessNodes.length-1; ++i ) {
+			var n_i = parentlessNodes[i];
+
 			//and compare to all other parentless nodes
 			for (var j = i+1; j < parentlessNodes.length; ++j) {
 				//get distance between current comparator nodes
-				var n_i = parentlessNodes[i];
 				var n_j = parentlessNodes[j];
 				dist = distance(n_i, n_j);
 
@@ -38,108 +35,138 @@ function process(d) {
 				}
 			}
 		}
-		//remove closest pair from list
+
+		//Once closest two are found, determine how to cluster them
 		node_i = parentlessNodes[index_i];
 		node_j = parentlessNodes[index_j];
 
-		parentlessNodes.splice(index_i, 1);
-		parentlessNodes.splice(index_j-1, 1);
-
-		//create a parent node with their average values
-		if(nodeCounter == 47) {
-			console.log(node_i);
-			console.log(node_j);
-		}
-		node_i["parent"] = "Node"+nodeCounter;
-		node_j["parent"] = "Node"+nodeCounter;
-		var newNode = { values: average(node_i, node_j), name: "Node"+nodeCounter, children: [node_i, node_j], parent:"null"};
-		nodeCounter++;
-
-		//insert into array
-		parentlessNodes.push(newNode);
-		allNodes.push(newNode);
-
-		//save as current best guess at root
-		root = newNode;
-	}
-
-	//The second pass combines equivalent children and compresses
-	//chains of single equivalent children and parents
-	//We use a closure algorithm, so track changes
-	var changes = 1;
-	while(changes > 0) {
-		changes = 0;
-		//Iterate over every node
-		for( var i = 0; i < allNodes.length; ++i ) {
-			curNode = allNodes[i];
-			//If it has no children, ignore it (since children have no
-			//reference back to their parents leaves are useless)
-			if(curNode.children == null)
-				continue;
-
-			//If it has only one child, this node is a candidate for compression
-			//if it is the same as its child
-			if(curNode.children.length == 1) {
-				var dist = distance(curNode, curNode.children[0]);
-				if(dist == 0) {
-					curNode.children = curNode.children[0].children;
-					changes++;
+		if(node_i.children != null) {
+			if(node_j.children != null) {
+				//if both nodes are branches
+				if(minDist == 0) {
+					//combine them if they are the same
+					adoptChildren(index_i, index_j);
+				} else {
+					//otherwise add a parent above them
+					createParentNode(index_i, index_j);
 				}
 			} else {
-				//Otherwise iterate through all pairs of children
-				for(var j = 0; j < curNode.children.length-1; j++) {
-					for(var k = j+1; k < curNode.children.length; k++) {
-						var n_j = curNode.children[j];
-						var n_k = curNode.children[k];
-
-						//If the children are the same, we combine them
-						var dist = distance(n_j, n_k);
-						if(dist == 0) {
-							if(n_j.children != null) {
-								//if both are branches, combine their children and delete
-								//the other branch
-								if(n_k.children != null) {
-									curNode.children.splice(k, 1);
-									n_j.children = n_j.children.concat(n_k.children);
-									k--;
-									changes++;
-								//if one is a leaf, add it as a child of this branch
-								} else {
-									curNode.children.splice(k, 1);
-									k--;
-									n_j.children.push(n_k);
-									changes++;
-								}
-							//if both are branches, combine their children and delete
-							//the other branch
-							} else if (n_k.children != null) {
-								curNode.children.splice(j, 1);
-								j--;
-								n_k.children.push(n_j);
-								changes++;
-							}
-						}
-					}
-				}
+				//If node i is a branch and j is a leaf, add j as
+				//a child of i
+				insertChild(index_i, index_j);
 			}
-		}
+		} else {
+			if(node_j.children != null) {
+				//If node j  is a branch and i is a leaf, add i as
+				//a child of j
+				insertChild(index_j, index_i);
+			} else {
+				//If both i and j are leaves, create a node above them
+				createParentNode(index_i, index_j);
+			}
+ 		}
 	}
-
 	return root;
+}
+
+/*
+	Adds node at child_index as a child of node at parent_index,
+	removes child from parentlessnodes, and updates parent
+	values to be an average of all children
+*/
+function insertChild(parent_index, child_index) {
+	//Find nodes 
+	parent = parentlessNodes[parent_index];
+	child = parentlessNodes[child_index];
+
+	//remove child from parentless
+	parentlessNodes.splice(child_index, 1);
+
+	//make it a child of parent
+	child.parent = parent.name;
+	parent.children.push(child);
+	updateParentAverage(parent);
+}
+
+
+/*
+	Removes node at old_parent_index and makes node at new_parent_index
+	adopt its children
+*/
+function adoptChildren(new_parent_index, old_parent_index) {
+	//Find nodes 
+	parent = parentlessNodes[new_parent_index];
+	old_parent = parentlessNodes[old_parent_index];
+
+	//remove old from parentless
+	parentlessNodes.splice(old_parent_index, 1);
+
+	for(var i = 0; i < old_parent.children.length; ++i){
+		cur_child = old_parent.children[i];
+		cur_child.parent = parent.name;
+		parent.children.push(cur_child);
+	}
+	updateParentAverage(parent);
+}
+
+
+/*
+	Creates a new node which is the parent of nodes a and b, and removes
+	a and b from parentlessNodes. index_b must be greater than index_a
+*/
+function createParentNode(index_a, index_b) {
+	//get nodes and remove from parentless list
+	a = parentlessNodes[index_a];
+	b = parentlessNodes[index_b];
+	parentlessNodes.splice(index_a, 1);
+	parentlessNodes.splice(index_b-1, 1);
+
+	//create a parent node with their average values
+	a["parent"] = "Node"+nodeCounter;
+	b["parent"] = "Node"+nodeCounter;
+	var newNode = { values: [], name: "Node"+nodeCounter, children: [a, b], parent:"null"};
+	updateParentAverage(newNode);
+	nodeCounter++;
+
+	//insert into array
+	parentlessNodes.push(newNode);
+
+	//save as current best guess at root
+	root = newNode;
 }
 
 /*
 	Returns an array consisting of the averages of the values from 
 	the data arrays of nodes a and b.
 */
-function average(a, b) {
-	var data = [];
-	var use_a = false;
-	for(var i = 0; i < a.values.length; ++i){
-		data.push((Number(a.values[i])+Number(b.values[i]))/2);
+function updateParentAverage(a) {
+	//for each value
+	a.values = [];
+	for(var i = 0; i < a.children[0].values.length; ++i){
+		var curVal = Number(a.children[0].values[i]);
+		for(var j = 1; j < a.children.length; ++j){
+			curVal = curVal*j/(j+1) + Number(a.children[j].values[i])/(j+1)	
+		}
+		a.values.push(curVal);
 	}
-	return data;
+	updateShared(a);
 }
+
+function updateShared(a) {
+	a.shared = null;
+	for(var i = 0; i < a.children.length; ++i){
+		if(a.shared == null) {
+			a.shared = a.children[i].shared.slice();
+		} else {
+			for(var j = 0;  j < a.shared.length; ++j){
+				if(a.shared[j] != a.children[i].shared[j]){
+					a.shared[j] = -1;
+				}
+			}
+		}
+	}
+}
+
 
 /*
 	Returns the distance between nodes and and b

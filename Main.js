@@ -8,9 +8,9 @@ var root;
 var radius = 800 / 2;
 
 d3.selection.prototype.moveToFront = function() {
-return this.each(function(){
-this.parentNode.appendChild(this);
-});
+	return this.each(function(){
+		this.parentNode.appendChild(this);
+	});
 };
 
 window.onload = function () {
@@ -62,7 +62,7 @@ function updateTree(newRoot) {
 	//Handle nodes
 	var node = svg.selectAll("g.node")
 		.moveToFront()
-		.data(nodes, function(d) { return d.name + d.data + "-" + (d.parent ? d.parent.name : "root");});
+		.data(nodes, function(d) { return d.name + d.values + "-" + (d.parent ? d.parent.name : "root");});
 
 	//Apply Basic Styles
 	var enter = node.enter()
@@ -88,8 +88,8 @@ function updateTree(newRoot) {
 	//Apply branch styles
 	enter.filter(function(d) { return d.children!=null; })
 		.on({
-			"click": clickLeaf,
-			"mouseover": hoverLeaf,
+			"click": clickNode,
+			"mouseover": hoverNode,
 			"mouseout": hoverOff
 		});
 
@@ -184,6 +184,7 @@ function clickSvg(node) {
 	When hovering on a branch, highlight all children of that branch
 */
 function hoverNode(node) {
+	document.getElementById("Node1").innerHTML = "<em>Shared</em> : " + node.shared;
 	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", "2");
 }
 
