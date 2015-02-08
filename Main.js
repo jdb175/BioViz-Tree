@@ -133,7 +133,7 @@ function clickLeaf(node) {
 	} else {
 		selectedNode = node;
 		selectedD3 = d3.select(this);
-		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
+		highlightPathSubsetWithColor(getAllParentNodes(node));
 		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
 		document.getElementById("Node2").innerHTML = "";
 		document.getElementById("Distance").innerHTML = "";
@@ -147,7 +147,7 @@ function clickLeaf(node) {
 */
 function hoverLeaf(node) {
 	if(selectedNode == null) {
-		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
+		highlightPathSubsetWithColor(getAllParentNodes(node));
 		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.data;
 	} else if(selectedNode != node) {
 		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + Math.abs(node.num - selectedNode.num);
