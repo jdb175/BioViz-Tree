@@ -1,6 +1,7 @@
 var tree;
 var root;
 var selectedNode;
+var selectedD3;
 
 window.onload = function () {
 	root = process(data);
@@ -81,6 +82,7 @@ function clickLeaf(node) {
 		document.getElementById("Distance").innerHTML = "";
 	} else {
 		selectedNode = node;
+		selectedD3 = d3.select(this);
 		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
 		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.data;
 		document.getElementById("Node2").innerHTML = "";
@@ -95,7 +97,7 @@ function clickLeaf(node) {
 */
 function hoverLeaf(node) {
 	if(selectedNode == null) {
-		highlightPathSubsetWithColor(getAllParentNodes(node), "lightsteelblue");
+		highlightPathSubsetWithColor(getAllParentNodes(node), "steelblue");
 		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.data;
 	} else if(selectedNode != node) {
 		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + Math.abs(node.num - selectedNode.num);
@@ -144,6 +146,25 @@ function highlightPathSubsetWithColor(set, color) {
 	.style("stroke", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? color : "#ccc";}
 	);
+
+	d3.selectAll(".node circle").transition().style("stroke", function(o) {
+		return contains(set, o) ? color : "#ccc";}
+	)
+	.style("fill", function(o) {
+		return contains(set, o) ? color : "#ccc";}
+	);
+
+	d3.selectAll(".root circle").transition().style("stroke", function(o) {
+		return contains(set, o) ? color : "#ccc";}
+	);
+
+	d3.selectAll(".leaf circle").transition().style("stroke", function(o) {
+		return contains(set, o) ? color : "#ccc";}
+	);
+
+	d3.selectAll(".leaf text").transition().style("fill", function(o) {
+		return contains(set, o) ? color : "#ccc";}
+	);
 }
 
 /*
@@ -153,6 +174,18 @@ function resetPathHighlighting() {
 	d3.selectAll("path.link").transition().style("stroke-opacity", 1)
 		.style("stroke", "#ccc")
 		.style("stroke-width", 1.5);
+
+	d3.selectAll(".node circle")
+		.transition().style("stroke", "steelblue")
+		.style("fill", "steelblue");
+
+	d3.selectAll(".root circle")
+		.transition().style("stroke", "steelblue");
+
+	d3.selectAll(".leaf circle")
+		.transition().style("stroke", "steelblue");
+
+	d3.selectAll(".leaf text").transition().style("fill", "black");
 }
 
 /*
