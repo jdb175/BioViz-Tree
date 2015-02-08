@@ -3,6 +3,7 @@ var root;
 var height;
 var width;
 var selectedNode;
+var shiftSelectedNode;
 
 window.onload = function () {
 	root = process(data);
@@ -54,21 +55,51 @@ window.onload = function () {
 }
 
 function clickNode(node) {
-	if(selectedNode == node) {
-		selectedNode = null;
-		 d3.selectAll("path.link").transition().style("stroke-opacity", 1)
-		.style("stroke-width", 1.5);
-	} else {
-		selectedNode = node;
-		//fade all elements
-		var nodesToShow = getAllParentNodes(node);
-	    d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
-			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 1 : 0.3;
-		})
-		.style("stroke-width", function(o) {
-			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 4 : 1.5;
-		});
+	var nodesToShow;
+	var color;
+	if (d3.event.shiftKey && (selectedNode != null || shiftSelectedNode != null)) {
+		if(selectedNode == null){
+			selectedNode = shiftSelectedNode;
+		}
+		shiftSelectedNode = node;
+		nodesToShow=getClosestConnection(selectedNode, shiftSelectedNode);
+		color = "red";
+    } else {
+    	shiftSelectedNode = null;
+		if(selectedNode == node) {
+			selectedNode = null;
+			d3.selectAll("path.link").transition().style("stroke-opacity", 1)
+				.style("stroke", "#ccc")
+				.style("stroke-width", 1.5);
+			return;
+		} else {
+			selectedNode = node;
+			nodesToShow = getAllParentNodes(node);
+			color = "steelblue";
+		}
 	}
+
+	d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
+		return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 1 : 0.3;
+	})
+	.style("stroke-width", function(o) {
+		return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? 4 : 1.5;
+	})
+	.style("stroke", function(o) {
+			return contains(nodesToShow, o.source) && contains(nodesToShow, o.target) ? color : "#ccc";}
+		);
+}
+
+function getClosestConnection(node, node2) {
+	var parents1 = getAllParentNodes(node);
+	var parents2 = getAllParentNodes(node2);
+
+	var sharedParents = parents1.filter(function(obj){ return contains(parents2, obj);});
+	sharedParents = sharedParents.filter(function(obj) { return !containsAny(obj.children, sharedParents)} )
+	
+	var ret1 = parents1.filter(function(obj){ return !contains(parents2, obj)});
+	var ret2 = parents2.filter(function(obj){ return !contains(parents1, obj)});
+	return ret1.concat(ret2).concat(sharedParents);
 }
 
 function getAllParentNodes(node) {
@@ -77,13 +108,21 @@ function getAllParentNodes(node) {
 	while(toVisit.length > 0) {
 		var cur = toVisit.pop();
 		nodesToShow.push(cur);
-		console.log("adding " + cur.name);
 		if(cur.parent != "null") {
-			console.log("  --toVisit " + cur.parent.name);
 			toVisit.push(cur.parent);
 		}
 	}
 	return nodesToShow;
+}
+
+function containsAny(a, b) {
+	 var i = b.length;
+    while (i--) {
+       if (contains(a, b[i])) {
+           return true;
+       }
+    }
+    return false;
 }
 
 function contains(a, obj) {
