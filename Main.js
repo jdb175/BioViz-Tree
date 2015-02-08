@@ -43,8 +43,9 @@ window.onload = function () {
 	updateTree(root);
 }
 
-function updateTree(root) {
-	var nodes = cluster.nodes(root);
+function updateTree(newRoot) {
+	curRoot = newRoot;
+	var nodes = cluster.nodes(newRoot);
 
 	//handle links
 	svg.selectAll(".link").remove();
@@ -86,11 +87,17 @@ function updateTree(root) {
 
 	//Apply branch styles
 	enter.filter(function(d) { return d.children!=null; })
-		.attr("class", function(d) { return d==root ? "node root" : "branch node" })
-		.on("click", clickNode);
+		.on({
+			"click": clickNode,
+			"mouseover": hoverNode,
+			"mouseout": hoverOff
+		});
 
 	//Apply positions for all nodes
-	node.transition().attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	node.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	//apply root style for branch root
+	node.filter(function(d) { return d.children!=null; })
+		.attr("class", function(d) { return d.name==curRoot.name ? "node root" : "branch node" })
 	
 	//Remove old
 	node.exit().remove();
@@ -105,6 +112,8 @@ function updateTree(root) {
 	When a branch node is clicked, recreate the tree with that node as root
 */
 function clickNode(node) {
+	resetPathHighlighting();
+	selectedNode = null;
 	updateTree(node);
 	document.getElementById("BackToRoot").setAttribute("active", true);
 }
@@ -172,6 +181,13 @@ function clickSvg(node) {
 }
 
 /*
+	When hovering on a branch, highlight all children of that branch
+*/
+function hoverNode(node) {
+	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", "2");
+}
+
+/*
 	The back to root button resets the tree centered at the root
 */
 function pressBackToRoot() {
@@ -185,12 +201,14 @@ function pressBackToRoot() {
 	Highlights connections between nodes in the given set to be bolder, and
 	the given color. Connections including nodes not in the set are faded out.
 */
-function highlightPathSubsetWithColor(set, color) {
+function highlightPathSubsetWithColor(set, color, width) {
+	width = typeof width !== 'undefined' ? width : 4;
+	color = typeof color !== 'undefined' ? color : "steelblue";
 	d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? 1 : 0.3;
 	})
 	.style("stroke-width", function(o) {
-		return contains(set, o.source) && contains(set, o.target) ? 4 : 1.5;
+		return contains(set, o.source) && contains(set, o.target) ? width : 1.5;
 	})
 	.style("stroke", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? color : "#ccc";}
@@ -273,6 +291,23 @@ function getAllParentNodes(node) {
 		nodesToShow.push(cur);
 		if(cur.parent != "null") {
 			toVisit.push(cur.parent);
+		}
+	}
+	return nodesToShow;
+}
+
+/*
+	Returns all nodes in a direct path from the given
+	node's children
+*/
+function getAllChildNodes(node) {
+	var nodesToShow = [];
+	var toVisit = [node];
+	while(toVisit.length > 0) {
+		var cur = toVisit.pop();
+		nodesToShow.push(cur);
+		if(cur.children != null) {
+			toVisit = toVisit.concat(cur.children);
 		}
 	}
 	return nodesToShow;
