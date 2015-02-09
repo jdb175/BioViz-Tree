@@ -66,6 +66,8 @@ function updateTree(newRoot) {
 		.attr("opacity", 0);
 
 	link.style("stroke", "#ccc")
+		.style("stroke-opacity", 1)
+		.style("stroke-width", 1.5)
 		.transition()
 		.duration(transTime)
 		.attr("d", diagonal)
@@ -139,7 +141,7 @@ function clickNode(node) {
 	resetPathHighlighting();
 	selectedNode = null;
 	updateTree(node);
-	document.getElementById("BackToRoot").setAttribute("active", true);
+	document.getElementById("BackToRoot").removeAttribute("disabled");
 }
 
 /* 
@@ -221,8 +223,10 @@ function hoverNode(node) {
 	The back to root button resets the tree centered at the root
 */
 function pressBackToRoot() {
+	selectedNode = null;
+	resetPathHighlighting();
 	updateTree(root);
-	document.getElementById("BackToRoot").setAttribute("active", false);
+	document.getElementById("BackToRoot").setAttribute("disabled", "true");
 }
 
 /********* UTILITIES *********/
