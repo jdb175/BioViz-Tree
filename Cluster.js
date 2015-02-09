@@ -4,8 +4,18 @@
 var nodeCounter = 0; //how many nodes we've creates (for naming)
 var parentlessNodes = []; 
 var root = null;
+var maxDist;
+
+var weights = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1]; //weights for each attribute
+
 
 function process(d) {
+
+	//calculate max distance
+	maxDist = 0;
+	for(var p = 0; p < weights.length; ++p) {
+		maxDist += weights[p];
+	}
 
 	//first we create parentless nodes with the numerical value of each item
 	for( var i = 0; i < d.length; ++i ) {
@@ -173,12 +183,9 @@ function updateShared(a) {
 	}
 }
 
-
 /*
 	Returns the distance between nodes and and b
 */
-var weights = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1]; //weights for each attribute
-
 function distance(a, b) {
 	var sum = 0;
 	for(var i = 0; i < a.values.length; ++i){

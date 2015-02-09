@@ -22,7 +22,7 @@ window.onload = function () {
 	cluster = d3.layout.cluster()
 		.size([360, radius - 80])
 		.separation(function (a, b) {
-		  return (Math.max(distance(a,b), 1) / a.depth);
+		  return (Math.max(distance(a,b)/maxDist*8, 1) / a.depth);
 		});
 
 	diagonal = d3.svg.diagonal.radial()
