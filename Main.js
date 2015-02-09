@@ -51,8 +51,6 @@ window.onload = function () {
 
 function updateTree(newRoot) {
 	canHover = false;
-	setTimeout(function(){ canHover=true; }, transTime);
-
 	curRoot = newRoot;
 	var nodes = cluster.nodes(newRoot);
 
@@ -128,6 +126,7 @@ function updateTree(newRoot) {
 	//Remove old
 	node.exit().remove();
 
+	setTimeout(function(){ canHover=true; }, transTime);
 
 	d3.select(self.frameElement).style("height", radius * 2 + "px");
 }
