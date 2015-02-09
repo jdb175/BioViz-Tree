@@ -86,6 +86,7 @@ function insertChild(parent_index, child_index) {
 	child.parent = parent.name;
 	parent.children.push(child);
 	updateParentAverage(parent);
+	root = parent;
 }
 
 
@@ -107,6 +108,7 @@ function adoptChildren(new_parent_index, old_parent_index) {
 		parent.children.push(cur_child);
 	}
 	updateParentAverage(parent);
+	root = parent;
 }
 
 
@@ -152,6 +154,10 @@ function updateParentAverage(a) {
 	updateShared(a);
 }
 
+/*
+	Makes the "shared" array of the node be the intersection of all children's
+	shared arrays
+*/
 function updateShared(a) {
 	a.shared = null;
 	for(var i = 0; i < a.children.length; ++i){
@@ -171,10 +177,12 @@ function updateShared(a) {
 /*
 	Returns the distance between nodes and and b
 */
+var weights = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1]; //weights for each attribute
+
 function distance(a, b) {
 	var sum = 0;
 	for(var i = 0; i < a.values.length; ++i){
-		sum+= Math.abs(Number(a.values[i])-Number(b.values[i]));
+		sum+= Math.abs(Number(a.values[i])-Number(b.values[i]))*weights[i];
 	}
 	return sum;
 }
