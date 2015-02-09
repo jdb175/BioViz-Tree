@@ -214,6 +214,8 @@ function clickSvg(node) {
 	When hovering on a branch, highlight all children of that branch
 */
 function hoverNode(node) {
+	if(!canHover)
+		return;
 	document.getElementById("Node1").innerHTML = "<em>Shared</em> : " + node.shared;
 	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", "2");
 }

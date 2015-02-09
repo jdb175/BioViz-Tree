@@ -6,7 +6,7 @@ var parentlessNodes = [];
 var root = null;
 var maxDist;
 
-var weights = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1]; //weights for each attribute
+var weights = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; //weights for each attribute
 
 
 function process(d) {
