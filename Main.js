@@ -20,7 +20,10 @@ window.onload = function () {
 	// from example http://bl.ocks.org/mbostock/4339607
 
 	cluster = d3.layout.cluster()
-		.size([360, radius - 80]);
+		.size([360, radius - 80])
+		.separation(function (a, b) {
+		  return (Math.max(distance(a,b), 1) / a.depth);
+		});
 
 	diagonal = d3.svg.diagonal.radial()
 		.projection(function(d) { return [d.y, d.x / 180 * Math.PI]; });
