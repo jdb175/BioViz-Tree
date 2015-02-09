@@ -7,6 +7,7 @@ var diagonal;
 var root;
 var radius = 800 / 2;
 var canHover = true;
+var transTime = 800;
 
 
 d3.selection.prototype.moveToFront = function() {
@@ -50,22 +51,23 @@ window.onload = function () {
 
 function updateTree(newRoot) {
 	canHover = false;
-	setTimeout(function(){ canHover=true }, 1000);
+	setTimeout(function(){ canHover=true; }, transTime);
 
 	curRoot = newRoot;
 	var nodes = cluster.nodes(newRoot);
 
 	//handle links
 	var link = svg.selectAll("path.link")
-		.data(cluster.links(nodes), function(d) { return d.source.name + d.target.name;});
+		.data(cluster.links(nodes), function(d) { return d.source.name +d.source.values+ d.target.name +d.target.values;});
 
 	link.enter().append("path")
 		.attr("class", "link")
 		.attr("d", diagonal)
 		.attr("opacity", 0);
 
-	link.transition()
-		.duration(1000)
+	link.style("stroke", "#ccc")
+		.transition()
+		.duration(transTime)
 		.attr("d", diagonal)
 		.attr("opacity", 1);
 
@@ -85,7 +87,7 @@ function updateTree(newRoot) {
 		.attr("r", 4.5)
 		.attr("opacity", 0)
 		.transition()
-		.duration(1000)
+		.duration(transTime)
 		.attr("opacity", 1);
 
 	//Apply leaf styles
@@ -101,7 +103,7 @@ function updateTree(newRoot) {
 		.text(function(d) { return d.name; })
 		.attr("opacity", 0)
 		.transition()
-		.duration(1000)
+		.duration(transTime)
 		.attr("opacity", 1);
 
 	//Apply branch styles
@@ -113,7 +115,7 @@ function updateTree(newRoot) {
 		});
 
 	//Apply positions for all nodes
-	node.transition().duration(1000).attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	node.transition().duration(transTime).attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 	node.selectAll("text")
 		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
 		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; });
