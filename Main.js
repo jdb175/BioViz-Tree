@@ -6,6 +6,8 @@ var cluster;
 var diagonal;
 var root;
 var radius = 800 / 2;
+var canHover = true;
+
 
 d3.selection.prototype.moveToFront = function() {
 	return this.each(function(){
@@ -47,20 +49,27 @@ window.onload = function () {
 }
 
 function updateTree(newRoot) {
+	canHover = false;
+	setTimeout(function(){ canHover=true }, 1000);
+
 	curRoot = newRoot;
 	var nodes = cluster.nodes(newRoot);
 
 	//handle links
-	svg.selectAll(".link").remove();
-
 	var link = svg.selectAll("path.link")
-		.data(cluster.links(nodes));
+		.data(cluster.links(nodes), function(d) { return d.source.name + d.target.name;});
+
 	link.enter().append("path")
 		.attr("class", "link")
 		.attr("d", diagonal)
-		.attr("opacity", 0)
-		.transition()
+		.attr("opacity", 0);
+
+	link.transition()
+		.duration(1000)
+		.attr("d", diagonal)
 		.attr("opacity", 1);
+
+	link.exit().remove();
 
 	//Handle nodes
 	var node = svg.selectAll("g.node")
@@ -71,8 +80,13 @@ function updateTree(newRoot) {
 	var enter = node.enter()
 		.append("g");
 	enter
+		.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 		.append("circle")
-		.attr("r", 4.5);
+		.attr("r", 4.5)
+		.attr("opacity", 0)
+		.transition()
+		.duration(1000)
+		.attr("opacity", 1);
 
 	//Apply leaf styles
 	enter.filter(function(d) { return d.children==null; })
@@ -84,7 +98,11 @@ function updateTree(newRoot) {
 		})
 		.append("text")
 		.attr("dy", ".31em")
-		.text(function(d) { return d.name; });
+		.text(function(d) { return d.name; })
+		.attr("opacity", 0)
+		.transition()
+		.duration(1000)
+		.attr("opacity", 1);
 
 	//Apply branch styles
 	enter.filter(function(d) { return d.children!=null; })
@@ -95,7 +113,7 @@ function updateTree(newRoot) {
 		});
 
 	//Apply positions for all nodes
-	node.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	node.transition().duration(1000).attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
 	node.selectAll("text")
 		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
 		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; });
@@ -150,6 +168,8 @@ function clickLeaf(node) {
 	node and the selected node (if a node is selected)
 */
 function hoverLeaf(node) {
+	if(!canHover)
+		return;
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node));
 		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.values;
@@ -165,6 +185,8 @@ function hoverLeaf(node) {
 	When exiting hover reset to the state before the hover
 */
 function hoverOff(node) {
+	if(!canHover)
+		return;
 	document.getElementById("Distance").innerHTML = "";
 	document.getElementById("Node2").innerHTML = "";
 
