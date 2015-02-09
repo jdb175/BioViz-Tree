@@ -84,9 +84,7 @@ function updateTree(newRoot) {
 		})
 		.append("text")
 		.attr("dy", ".31em")
-		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
-		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; })
-		.text(function(d) { return d.name; });;
+		.text(function(d) { return d.name; });
 
 	//Apply branch styles
 	enter.filter(function(d) { return d.children!=null; })
@@ -98,6 +96,9 @@ function updateTree(newRoot) {
 
 	//Apply positions for all nodes
 	node.attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + d.y + ")"; })
+	node.selectAll("text")
+		.attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
+		.attr("transform", function(d) { return d.x < 180 ? "translate(8)" : "rotate(180)translate(-8)"; });
 	//apply root style for branch root
 	node.filter(function(d) { return d.children!=null; })
 		.attr("class", function(d) { return d.name==curRoot.name ? "node root" : "branch node" })
@@ -171,6 +172,7 @@ function hoverOff(node) {
 		document.getElementById("Node1").innerHTML = "";
 		resetPathHighlighting();
 	} else {
+		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
 		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue");
 	}
 }
@@ -181,7 +183,7 @@ function hoverOff(node) {
 function clickSvg(node) {
 	selectedNode = null;
 	resetPathHighlighting();
-}
+} 
 
 /*
 	When hovering on a branch, highlight all children of that branch
