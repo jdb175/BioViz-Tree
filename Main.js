@@ -2,6 +2,7 @@ var tree;
 var selectedNode;
 var selectedD3;
 var svg;
+var preview;
 var cluster;
 var diagonal;
 var root;
@@ -25,7 +26,7 @@ window.onload = function () {
 	cluster = d3.layout.cluster()
 		.size([360, radius - 80])
 		.separation(function (a, b) {
-		  return (Math.max(distance(a,b)/maxDist*8, 1) / a.depth);
+		  return (Math.max(distance(a,b)/maxDist*4, 1) / a.depth);
 		});
 
 	diagonal = d3.svg.diagonal.radial()
@@ -43,16 +44,48 @@ window.onload = function () {
           "click": clickSvg, 
         });
 
+    preview = svg.append("g")
+		.attr("transform", "translate(" + 85 + "," + 85 + "), scale(0.2)");
+
+	preview.append("rect")
+        .attr({"class": "overlay" , "width": radius*2 , "height": radius*2, "x": -radius, "y": -radius})
+        .attr("opacity", 0)
+        .on({
+          "click": pressBackToRoot, 
+        })
+
     svg = svg.append("g")
 		.attr("transform", "translate(" + radius + "," + radius + ")");
 
 	updateTree(root);
+
+	//create preview
+	var rNodes = cluster.nodes(root);
+
+	preview.selectAll("path.link")
+		.data(cluster.links(rNodes), function(d) { return d.source.name +d.source.values+ d.target.name +d.target.values;})
+		.enter()
+		.append("path")
+		.attr("class", "link")
+		.attr("d", diagonal)
+		.attr("opacity", 0)
+		.style("stroke", "#ccc")
+		.style("stroke-opacity", 1)
+		.style("stroke-width", 1.5)
+		.attr("d", diagonal)
+		.attr("opacity", 0);
 }
 
 function updateTree(newRoot) {
 	canHover = false;
 	curRoot = newRoot;
 	var nodes = cluster.nodes(newRoot);
+
+	if(curRoot == root) {
+		preview.selectAll("path.link").transition().duration(transTime).attr("opacity", 0);
+	} else {
+		preview.selectAll("path.link").transition().duration(transTime).attr("opacity", 1);
+	}
 
 	//handle links
 	var link = svg.selectAll("path.link")
@@ -236,10 +269,11 @@ function pressBackToRoot() {
 	Highlights connections between nodes in the given set to be bolder, and
 	the given color. Connections including nodes not in the set are faded out.
 */
-function highlightPathSubsetWithColor(set, color, width) {
+function highlightPathSubsetWithColor(set, color, width, target) {
 	width = typeof width !== 'undefined' ? width : 4;
 	color = typeof color !== 'undefined' ? color : "steelblue";
-	d3.selectAll("path.link").transition().style("stroke-opacity", function(o) {
+	target = typeof target !== 'undefined' ? target : d3;
+	target.selectAll("path.link").transition().style("stroke-opacity", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? 1 : 0.3;
 	})
 	.style("stroke-width", function(o) {
@@ -249,22 +283,22 @@ function highlightPathSubsetWithColor(set, color, width) {
 		return contains(set, o.source) && contains(set, o.target) ? color : "#ccc";}
 	);
 
-	d3.selectAll(".node circle").transition().style("stroke", function(o) {
+	target.selectAll(".node circle").transition().style("stroke", function(o) {
 		return contains(set, o) ? color : "#ccc";}
 	)
 	.style("fill", function(o) {
 		return contains(set, o) ? color : "#ccc";}
 	);
 
-	d3.selectAll(".root circle").transition().style("stroke", function(o) {
+	target.selectAll(".root circle").transition().style("stroke", function(o) {
 		return contains(set, o) ? color : "#ccc";}
 	);
 
-	d3.selectAll(".leaf circle").transition().style("stroke", function(o) {
+	target.selectAll(".leaf circle").transition().style("stroke", function(o) {
 		return contains(set, o) ? color : "#ccc";}
 	);
 
-	d3.selectAll(".leaf text").transition().style("fill", function(o) {
+	target.selectAll(".leaf text").transition().style("fill", function(o) {
 		return contains(set, o) ? color : "#ccc";}
 	);
 }
@@ -273,9 +307,11 @@ function highlightPathSubsetWithColor(set, color, width) {
 	Resets all connections to their default style
 */
 function resetPathHighlighting() {
-	d3.selectAll("path.link").transition().style("stroke-opacity", 1)
+	svg.selectAll("path.link").transition().style("stroke-opacity", 1)
 		.style("stroke", "#ccc")
 		.style("stroke-width", 1.5);
+
+	highlightPathSubsetWithColor(getAllChildNodes(curRoot), undefined, undefined, preview);
 
 	d3.selectAll(".node circle")
 		.transition().style("stroke", "steelblue")
