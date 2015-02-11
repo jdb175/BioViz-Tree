@@ -12,7 +12,7 @@
 		
 		.tooltip {
 		  padding: 8px;
-		  background: black;
+		  background: #222;
 		  color: #FF4040;
 		  opacity: 80%;
 		  border-radius: 2px;
@@ -69,16 +69,36 @@
 		}
 
 		#weightscontainer {
-			margin: none;
+			margin-top: 80px;
 			width: 250px;
 			font: 12px sans-serif;
 			float: left;
 		}
 
-		td {
+		tr td {
 			min-width: 55px;
 			padding: 2px;
 			text-align: center;
+			border: 1px solid #eee;
+			border-top: 2px solid #DDD;
+		}
+
+		tr:nth-child(odd) {
+		    background: #F9F9F9;
+		}
+
+		th {
+			border-bottom: 3px solid #DDD;
+			padding: 2px;
+			height: 30px;
+			color: steelblue;
+			font-weight: bold;
+			background: #DDD;
+		}
+
+		table {
+			font: 12px sans-serif;
+			border-collapse: collapse;
 		}
 
 		svg {
@@ -99,7 +119,7 @@
 		<label id="Distance"></label><br/>
 		</div>
 		<div id="weightscontainer">
-		<tablie id="weights"/>
+		<table id="weights"/>
 		</div>
 	</body>
 </html>

@@ -191,7 +191,8 @@ function updateShared(a) {
 function distance(a, b) {
 	var sum = 0;
 	for(var i = 0; i < a.values.length; ++i){
-		sum+= Math.abs(Number(a.values[i])-Number(b.values[i]))*weights[i];
+		if(a.values[i] != b.values[i])
+			sum+=Number(weights[i]);
 	}
 	return sum;
 }

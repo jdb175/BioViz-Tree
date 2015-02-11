@@ -77,6 +77,9 @@ function initializeTree() {
 	updateTree(root);
 }
 
+/*
+	Creates the small preview tree of the main root
+*/
 function createPreview() {
 	//create preview
 	var rNodes = cluster.nodes(root);
@@ -97,6 +100,9 @@ function createPreview() {
 		.attr("opacity", 0);
 }
 
+/*
+	Updates the tree to come from root newRoot
+*/
 function updateTree(newRoot) {
 	canHover = false;
 	curRoot = newRoot;
@@ -357,9 +363,12 @@ function resetPathHighlighting() {
 */
 function updateWeights() {
 	//get weights
+	$(this).prop("disabled",true);
+	$("#resetWeights").prop("disabled",true);
 	for(var i = 0; i < weights.length; ++i) {
-		weights[i] = $("#weights"+i).val();
+		weights[i] = Number($("#weights"+i).val());
 	}
+
 
 	//reprocess data
 	root = process(data);
@@ -389,6 +398,8 @@ function resetWeights() {
 		$("#weights"+i).val(weights[i]);
 		$("#weightlabels"+i).html(weights[i].toFixed(1));
 	}
+	$("#updateWeights").prop("disabled",true);
+	$(this).prop("disabled",true);
 }
 
 /*
