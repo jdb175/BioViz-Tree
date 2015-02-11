@@ -10,7 +10,7 @@ The distance between two nodes is the number of differences between their values
 ## Basic Tree Visualization
 The clustering algorithm rturns the root of the resulting tree, which is made into a radial cluster dendrogram with d3's cluster and siagonal classes. The basic tree was based on [this example](http://bl.ocks.org/mbostock/4339607). I don't know exactly what happens behind the scenes, but those classes provide me with a set of nodes and paths which can be rendered. I heavily modified the tree to introduce my own css styling, transitions and updating, and several interactions discussed in the next section.
 
-##Additions
+## Additions
 I made several additions beyond the basic requirements of this assignment. All of them were focused on increasing the interaction, analysis, and clustering quality of the tree.
 
 * The clustering algorithm allows nodes to have more than two children.
@@ -37,3 +37,5 @@ I made several additions beyond the basic requirements of this assignment. All o
 * The weight of each attribute can be changed, and the tree regenerated.
 	* Users can reconfigure the clustering to see how the resulting tree will change, and see which configurations lead to the most significant or correct clusterings.
 
+## Running it
+Open index.html in a modern web browser.

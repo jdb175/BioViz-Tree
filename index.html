@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 		<title>Tree of Life</title>
-		<script src="./jquery-1.11.2.min.js"></script>
-		<script src="./d3min.js" charset="utf-8"></script>
-		<script src="./zoo.js"></script>
-		<script src="./Table.js"></script>
-		<script src="./Cluster.js"></script>
-		<script src="./Main.js"></script>
+		<script src="./libraries/jquery-1.11.2.min.js"></script>
+		<script src="./libraries/d3min.js" charset="utf-8"></script>
+		<script src="./js/zoo.js"></script>
+		<script src="./js/Table.js"></script>
+		<script src="./js/Cluster.js"></script>
+		<script src="./js/Main.js"></script>
 		  <style>
 
 		
@@ -69,8 +69,8 @@
 		}
 
 		#weightscontainer {
-			margin-top: 80px;
-			width: 250px;
+			width:450px;
+			margin-top: 30px;
 			font: 12px sans-serif;
 			float: left;
 		}
@@ -97,8 +97,13 @@
 		}
 
 		table {
+			width:450px;
 			font: 12px sans-serif;
 			border-collapse: collapse;
+		}
+
+		b {
+			color: steelblue;		
 		}
 
 		svg {
@@ -108,18 +113,34 @@
 			-ms-user-select:none;
 			-o-user-select:none;
 			user-select:none;
+			font-family: 'Helvetica Neue';
 		 }
+
+		h1 { color: #111; font-family: 'Helvetica Neue', sans-serif; font-size: 40px; font-weight: bold; letter-spacing: -1px; line-height: 1; text-align: center; margin-bottom: 12px;}
+
+		h2 { color: #111; font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: bold; line-height: 18px; text-align: center; }
+
+		p, li, td { color: #685206; font-family: 'Helvetica Neue', sans-serif; font-size: 11px; line-height: 14px; margin: 0 0 12px; text-align: justify; text-justify: inter-word; }
+
+		#center {
+			margin-left: auto;
+			margin-right: auto;
+			width: 1300px;
+		}
 		 
 	    </style>
 	</head>
 	<body bgcolor="#fdfcf9">
-		<div id="treecontainer">
-		<svg/>
-		<br/>
-		<label id="Distance"></label><br/>
-		</div>
-		<div id="weightscontainer">
-		<table id="weights"/>
+		<div id="center">
+			<div id="treecontainer">
+				<svg/>
+			</div>
+			<div id="weightscontainer">
+				<h1>Tree of Life</h1>
+				<p>	&nbsp&nbsp&nbspThis is radial dendrograph of hierarchically clustered data from the <a href="https://archive.ics.uci.edu/ml/datasets/Zoo">Zoo dataset</a>. Clicking or hovering on leaf nodes will show information about them in the table below. Hovering on a branch will show all shared characteristics among the children of that branch in the table. Clicking on a branch node will filter the tree to show the subtree beginning with that branch. When viewing a subtree, you can return to the root by clicking the small tree in the top left. </p>
+				<table id="weights"> </table>
+				<p>Check it out on <a href="https://github.com/jdb175/BioViz-Tree">Github</a>.</p>
+			</div>
 		</div>
 	</body>
 </html>
