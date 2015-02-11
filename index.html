@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 		<title>Tree of Life</title>
+		<script src="./jquery-1.11.2.min.js"></script>
+		<script src="./rangeslider.min.js"></script>
 		<script src="./d3min.js" charset="utf-8"></script>
 		<script src="./zoo.js"></script>
 		<script src="./Main.js"></script>
@@ -31,6 +33,18 @@
 		   stroke-width: 1.5px;
 		 }
 
+		#treecontainer {
+			margin: none;
+			float: left;
+		}
+
+		#weightscontainer {
+			margin: none;
+			width: 250px;
+			font: 12px sans-serif;
+			float: left;
+		}
+
 		 svg {
 			-webkit-user-select:none;
 			-khtml-user-select:none;
@@ -43,26 +57,15 @@
 	    </style>
 	</head>
 	<body bgcolor="#fdfcf9">
+		<div id="treecontainer">
 		<svg/>
 		<br/>
 		<label id="Distance"></label><br/>
 		<label id="Node1"></label><br/>
 		<label id="Node2"></label><br/>
-		Hair: <input type="range"/><br/>
-		Feathers: <input type="range"/><br/>
-		Eggs: <input type="range"/><br/>
-		Milk: <input type="range"/><br/>
-		Airborne: <input type="range"/><br/>
-		Aquatic: <input type="range"/><br/>
-		Predator: <input type="range"/><br/>
-		Toothed: <input type="range"/><br/>
-		Backbone: <input type="range"/><br/>
-		Breathes: <input type="range"/><br/>
-		Venomous: <input type="range"/><br/>
-		Fins: <input type="range"/><br/>
-		Tail: <input type="range"/><br/>
-		Legs: <input type="range"/><br/>
-		Domestic: <input type="range"/><br/>
-		Catsize: <input type="range"/>
+		</div>
+		<div id="weightscontainer">
+		<tablie id="weights"/>
+		</div>
 	</body>
 </html>

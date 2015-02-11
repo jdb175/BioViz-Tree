@@ -6,11 +6,13 @@ var parentlessNodes = [];
 var root = null;
 var maxDist;
 
+var names = ["hair", "feathers", "eggs", "milk", "airborne", "aquatic", "predator", "toothed", "backbone", "breathes", "venomous", "fins", "legs", "tail", "domestic", "catsize"]; //names of each attribute
 var weights = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; //weights for each attribute
 
 
 function process(d) {
-
+	parentlessNodes = [];
+	root = null;
 	//calculate max distance
 	maxDist = 0;
 	for(var p = 0; p < weights.length; ++p) {

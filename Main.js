@@ -19,7 +19,61 @@ d3.selection.prototype.moveToFront = function() {
 
 window.onload = function () {
 	root = process(data);
+	initializeTree();
 
+	//Create weight sliders
+	for(var i = 0; i < weights.length; ++i){
+		$('#weights').append("<tr></tr>");
+		$('#weights tr:last').append("<td>"+names[i]+"</td>");
+		$('#weights tr:last').append("<td id=\"1_"+i+"\"/><td id=\"2_"+i+"\"/>");
+		$('#weights tr:last').append("<td><input id=\"weights"+i+"\"type=\"range\"/ min=\"0\" max=\"10\" step=\".1\"></td>");
+		$('#weights tr:last').append("<td id=\"weightlabels"+i+"\"></td>");
+		var sliderId = "#weights"+i;
+		$(sliderId).val(1).change(generate_handler(i));
+	}
+
+	//create update button
+	$('#weights').append("<button id=\"updateWeights\">Update</button>")
+	$('#updateWeights').click(rebuildTree);
+}
+
+function generate_handler( i ) {
+    return function(event) { 
+    	weights[i] = Number(this.value);
+    	$("#weightlabels"+i).html(Number(this.value).toFixed(1));
+    };
+}
+
+function showItem(index, vals) {
+	for(var i = 0; i < weights.length; ++i) {
+		var selector = "#"+index+"_"+i;
+		if(vals != null) {
+			$(selector).html(String(vals[i]));
+		} else {
+			$(selector).html("");
+		}
+	}
+}
+
+function rebuildTree() {
+	root = process(data);
+	selectedNode = null;
+
+	//update cluster separation
+	cluster = d3.layout.cluster()
+	.size([360, radius - 80])
+	.separation(function (a, b) {
+		  return (Math.max(distance(a,b)/maxDist*4, 1) / a.depth);
+	});
+
+	//create preview
+	createPreview();
+
+	//create tree
+	updateTree(root);
+}
+
+function initializeTree() {
 	// ************** Generate the tree diagram  *****************
 	// from example http://bl.ocks.org/mbostock/4339607
 
@@ -57,11 +111,16 @@ window.onload = function () {
     svg = svg.append("g")
 		.attr("transform", "translate(" + radius + "," + radius + ")");
 
+	createPreview();
 	updateTree(root);
+}
 
+function createPreview() {
 	//create preview
 	var rNodes = cluster.nodes(root);
 
+	preview.selectAll("path.link")
+		.remove();
 	preview.selectAll("path.link")
 		.data(cluster.links(rNodes), function(d) { return d.source.name +d.source.values+ d.target.name +d.target.values;})
 		.enter()
@@ -173,7 +232,6 @@ function clickNode(node) {
 	resetPathHighlighting();
 	selectedNode = null;
 	updateTree(node);
-	document.getElementById("BackToRoot").removeAttribute("disabled");
 }
 
 /* 
@@ -185,15 +243,15 @@ function clickLeaf(node) {
 	if(selectedNode == node) {
 		selectedNode = null;
 		resetPathHighlighting();
-		document.getElementById("Node1").innerHTML = "";
-		document.getElementById("Node2").innerHTML = "";
+		showItem(1, null);
+		showItem(2, null);
 		document.getElementById("Distance").innerHTML = "";
 	} else {
 		selectedNode = node;
 		selectedD3 = d3.select(this);
 		highlightPathSubsetWithColor(getAllParentNodes(node));
-		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
-		document.getElementById("Node2").innerHTML = "";
+		showItem(1, node.values);
+		showItem(2, null);
 		document.getElementById("Distance").innerHTML = "";
 	}	
 }
@@ -208,12 +266,15 @@ function hoverLeaf(node) {
 		return;
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node));
-		document.getElementById("Node1").innerHTML = "<em>" + node.name + "</em> : " + node.values;
+		highlightPathSubsetWithColor(getAllParentNodes(node), undefined, undefined, preview, 1);
+		showItem(1, node.values);
+		showItem(2, null);
 	} else if(selectedNode != node) {
 		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + distance(node, selectedNode);
-		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
-		document.getElementById("Node2").innerHTML = "<em>" + node.name + "</em> : " + node.values;
+		showItem(1, selectedNode.values);
+		showItem(2, node.values);
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
+		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral", undefined, preview, 1);
 	}
 }
 
@@ -227,11 +288,14 @@ function hoverOff(node) {
 	document.getElementById("Node2").innerHTML = "";
 
 	if(selectedNode == null) {
-		document.getElementById("Node1").innerHTML = "";
+		showItem(1, null);
+		showItem(2, null);
 		resetPathHighlighting();
 	} else {
-		document.getElementById("Node1").innerHTML = "<em>" + selectedNode.name + "</em> : " + selectedNode.values;
+		showItem(1, selectedNode.values);
+		showItem(2, null);
 		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue");
+		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue", 4, preview, 1);
 	}
 }
 
@@ -250,7 +314,8 @@ function hoverNode(node) {
 	if(!canHover)
 		return;
 	document.getElementById("Node1").innerHTML = "<em>Shared</em> : " + node.shared;
-	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", "2");
+	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", 2);
+	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", 2, preview, 1);
 }
 
 /*
@@ -260,7 +325,6 @@ function pressBackToRoot() {
 	selectedNode = null;
 	resetPathHighlighting();
 	updateTree(root);
-	document.getElementById("BackToRoot").setAttribute("disabled", "true");
 }
 
 /********* UTILITIES *********/
@@ -269,12 +333,14 @@ function pressBackToRoot() {
 	Highlights connections between nodes in the given set to be bolder, and
 	the given color. Connections including nodes not in the set are faded out.
 */
-function highlightPathSubsetWithColor(set, color, width, target) {
+function highlightPathSubsetWithColor(set, color, width, target, minOpacity) {
 	width = typeof width !== 'undefined' ? width : 4;
 	color = typeof color !== 'undefined' ? color : "steelblue";
-	target = typeof target !== 'undefined' ? target : d3;
+	target = typeof target !== 'undefined' ? target : svg;
+	minOpacity = typeof minOpacity !== 'undefined' ? minOpacity : "0.3";
+
 	target.selectAll("path.link").transition().style("stroke-opacity", function(o) {
-		return contains(set, o.source) && contains(set, o.target) ? 1 : 0.3;
+		return contains(set, o.source) && contains(set, o.target) ? 1 : minOpacity;
 	})
 	.style("stroke-width", function(o) {
 		return contains(set, o.source) && contains(set, o.target) ? width : 1.5;
@@ -311,7 +377,7 @@ function resetPathHighlighting() {
 		.style("stroke", "#ccc")
 		.style("stroke-width", 1.5);
 
-	highlightPathSubsetWithColor(getAllChildNodes(curRoot), undefined, undefined, preview);
+	highlightPathSubsetWithColor(getAllChildNodes(curRoot), "steelblue", 2, preview, 1);
 
 	d3.selectAll(".node circle")
 		.transition().style("stroke", "steelblue")
