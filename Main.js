@@ -21,13 +21,16 @@ window.onload = function () {
 	root = process(data);
 	initializeTree();
 
+	
+	$('#weights').append("<tr><td>Attribute</td><td id=\"1_name\">--</td><td id=\"2_name\">--</td><td/><td>weight</td></tr>");
+
 	//Create weight sliders
 	for(var i = 0; i < weights.length; ++i){
 		$('#weights').append("<tr></tr>");
 		$('#weights tr:last').append("<td>"+names[i]+"</td>");
-		$('#weights tr:last').append("<td id=\"1_"+i+"\"/><td id=\"2_"+i+"\"/>");
+		$('#weights tr:last').append("<td id=\"1_"+i+"\">--</td><td id=\"2_"+i+"\"/>--</td>");
 		$('#weights tr:last').append("<td><input id=\"weights"+i+"\"type=\"range\"/ min=\"0\" max=\"10\" step=\".1\"></td>");
-		$('#weights tr:last').append("<td id=\"weightlabels"+i+"\"></td>");
+		$('#weights tr:last').append("<td id=\"weightlabels"+i+"\">1.0</td>");
 		var sliderId = "#weights"+i;
 		$(sliderId).val(1).change(generate_handler(i));
 	}
@@ -44,13 +47,45 @@ function generate_handler( i ) {
     };
 }
 
-function showItem(index, vals) {
+function DisplayShared(n) {
+	$("#1_name").html("Shared");
 	for(var i = 0; i < weights.length; ++i) {
-		var selector = "#"+index+"_"+i;
-		if(vals != null) {
-			$(selector).html(String(vals[i]));
+		if(n.shared[i] != "-1") {
+			$("#1_"+i).html("<b>" + String(n.shared[i]) + "</b>");
 		} else {
-			$(selector).html("");
+			$("#1_"+i).html("--");
+		}
+	}
+}
+
+function displayNodeValues(n1, n2) {
+	for(var i = 0; i < weights.length; ++i) {
+		if(n1 != null) {
+			$("#1_name").html(String(n1.name));
+			if(n2 != null) {
+				$("#2_name").html(String(n2.name));
+				if(n1.values[i] == n2.values[i]) {
+					$("#1_"+i).html("<b>" + String(n1.values[i]) + "</b>");
+					$("#2_"+i).html("<b>" + String(n2.values[i]) + "</b>");
+				} else {
+					$("#1_"+i).html(String(n1.values[i]));
+					$("#2_"+i).html(String(n2.values[i]));
+				}
+			} else {
+				$("#1_"+i).html(String(n1.values[i]));
+				$("#2_name").html("--");
+				$("#2_"+i).html("--");
+			}
+		} else {
+			$("#1_name").html("--");
+			$("#1_"+i).html("--");
+			if(n2 != null) {
+				$("#2_name").html(String(n2.name));
+				$("#2_"+i).html(String(n2.values[i]));
+			} else {
+				$("#2_name").html("--");
+				$("#2_"+i).html("--");
+			}
 		}
 	}
 }
@@ -243,15 +278,13 @@ function clickLeaf(node) {
 	if(selectedNode == node) {
 		selectedNode = null;
 		resetPathHighlighting();
-		showItem(1, null);
-		showItem(2, null);
+		displayNodeValues(null, null);
 		document.getElementById("Distance").innerHTML = "";
 	} else {
 		selectedNode = node;
 		selectedD3 = d3.select(this);
 		highlightPathSubsetWithColor(getAllParentNodes(node));
-		showItem(1, node.values);
-		showItem(2, null);
+		displayNodeValues(node, null);
 		document.getElementById("Distance").innerHTML = "";
 	}	
 }
@@ -267,12 +300,10 @@ function hoverLeaf(node) {
 	if(selectedNode == null) {
 		highlightPathSubsetWithColor(getAllParentNodes(node));
 		highlightPathSubsetWithColor(getAllParentNodes(node), undefined, undefined, preview, 1);
-		showItem(1, node.values);
-		showItem(2, null);
+		displayNodeValues(node, null);
 	} else if(selectedNode != node) {
 		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + distance(node, selectedNode);
-		showItem(1, selectedNode.values);
-		showItem(2, node.values);
+		displayNodeValues(selectedNode, node);
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral", undefined, preview, 1);
 	}
@@ -288,12 +319,10 @@ function hoverOff(node) {
 	document.getElementById("Node2").innerHTML = "";
 
 	if(selectedNode == null) {
-		showItem(1, null);
-		showItem(2, null);
+		displayNodeValues(null, null);
 		resetPathHighlighting();
 	} else {
-		showItem(1, selectedNode.values);
-		showItem(2, null);
+		displayNodeValues(selectedNode, null);
 		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue");
 		highlightPathSubsetWithColor(getAllParentNodes(selectedNode), "steelblue", 4, preview, 1);
 	}
@@ -304,6 +333,7 @@ function hoverOff(node) {
 */
 function clickSvg(node) {
 	selectedNode = null;
+	displayNodeValues(null, null);
 	resetPathHighlighting();
 } 
 
@@ -313,7 +343,7 @@ function clickSvg(node) {
 function hoverNode(node) {
 	if(!canHover)
 		return;
-	document.getElementById("Node1").innerHTML = "<em>Shared</em> : " + node.shared;
+	DisplayShared(node);
 	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", 2);
 	highlightPathSubsetWithColor(getAllChildNodes(node), "steelblue", 2, preview, 1);
 }
