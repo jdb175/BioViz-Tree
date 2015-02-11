@@ -4,17 +4,40 @@
 		<script src="./jquery-1.11.2.min.js"></script>
 		<script src="./d3min.js" charset="utf-8"></script>
 		<script src="./zoo.js"></script>
-		<script src="./Main.js"></script>
+		<script src="./Table.js"></script>
 		<script src="./Cluster.js"></script>
 		<script src="./Main.js"></script>
 		  <style>
 
+		
 		.tooltip {
 		  padding: 8px;
-		  background: rgba(0, 0, 0, 0.8);
+		  background: black;
 		  color: #FF4040;
 		  opacity: 80%;
 		  border-radius: 2px;
+		}
+		.tooltip:after, .tooltip:before {
+			right: 100%;
+			top: 50%;
+			border: solid transparent;
+			content: " ";
+			height: 0;
+			width: 0;
+			position: absolute;
+			pointer-events: none;
+			opacity: 80%;
+		}
+
+		.tooltip:after {
+			border-color: rgba(0, 0, 0, 0);
+			border-right-color: #000000;
+			border-width: 4px;
+			margin-top: -4px;
+		}
+		.tooltip:before {
+			border-width: 7px;
+			margin-top: -7px;
 		}
 
 		 .leaf circle {
