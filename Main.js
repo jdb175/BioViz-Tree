@@ -197,6 +197,8 @@ function updateTree(newRoot) {
 	When a branch node is clicked, recreate the tree with that node as root
 */
 function clickNode(node) {
+	if(!canHover)
+		return;
 	resetPathHighlighting();
 	selectedNode = null;
 	table.displayNodeValues(null, null);
@@ -208,6 +210,8 @@ function clickNode(node) {
 	or deselect it if we clicked the selected node
  */
 function clickLeaf(node) {
+	if(!canHover)
+		return;
 	d3.event.stopPropagation();
 	if(selectedNode == node) {
 		selectedNode = null;
@@ -268,6 +272,8 @@ function hoverOff(node) {
 	When the background is clicked, deselect any selected leaf node
 */
 function clickSvg(node) {
+	if(!canHover)
+		return;
 	selectedNode = null;
 	table.displayNodeValues(null, null);
 	resetPathHighlighting();
@@ -288,6 +294,8 @@ function hoverNode(node) {
 	The back to root button resets the tree centered at the root
 */
 function pressBackToRoot() {
+	if(!canHover)
+		return;
 	selectedNode = null;
 	resetPathHighlighting();
 	updateTree(root);
