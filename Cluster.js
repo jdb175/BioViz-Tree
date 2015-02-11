@@ -16,7 +16,7 @@ function process(d) {
 	//calculate max distance
 	maxDist = 0;
 	for(var p = 0; p < weights.length; ++p) {
-		maxDist += weights[p];
+		maxDist += Number(weights[p]);
 	}
 
 	//first we create parentless nodes with the numerical value of each item

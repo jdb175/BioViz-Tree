@@ -8,6 +8,7 @@ var diagonal;
 var root;
 var radius = 800 / 2;
 var canHover = true;
+var tooltip;
 var transTime = 800;
 
 
@@ -20,9 +21,11 @@ d3.selection.prototype.moveToFront = function() {
 window.onload = function () {
 	root = process(data);
 	initializeTree();
+	initializeTable();
+}
 
-	
-	$('#weights').append("<tr><td>Attribute</td><td id=\"1_name\">--</td><td id=\"2_name\">--</td><td/><td>weight</td></tr>");
+function initializeTable() {
+	$('#weights').append("<tr><th>Attribute</th><th id=\"1_name\">--</th><th id=\"2_name\">--</th><th/><th>weight</th></tr>");
 
 	//Create weight sliders
 	for(var i = 0; i < weights.length; ++i){
@@ -31,20 +34,22 @@ window.onload = function () {
 		$('#weights tr:last').append("<td id=\"1_"+i+"\">--</td><td id=\"2_"+i+"\"/>--</td>");
 		$('#weights tr:last').append("<td><input id=\"weights"+i+"\"type=\"range\"/ min=\"0\" max=\"10\" step=\".1\"></td>");
 		$('#weights tr:last').append("<td id=\"weightlabels"+i+"\">1.0</td>");
-		var sliderId = "#weights"+i;
-		$(sliderId).val(1).change(generate_handler(i));
+		$("#weights"+i).val(1).change(generate_handler(i));
 	}
 
 	//create update button
-	$('#weights').append("<button id=\"updateWeights\">Update</button>")
+	$('#weights').append("<tr><td/><td/><td/><td/><td><button id=\"updateWeights\">Update</button></td></tr>")
 	$('#updateWeights').click(rebuildTree);
-}
+	$('#weights').append("<tr><td/><td/><td/><td/><td><button id=\"resetWeights\">Reset</button></td></tr>")
+	$('#resetWeights').click(resetWeights);
 
-function generate_handler( i ) {
-    return function(event) { 
-    	weights[i] = Number(this.value);
-    	$("#weightlabels"+i).html(Number(this.value).toFixed(1));
-    };
+	displayNodeValues(null, null);
+
+	function generate_handler( i ) {
+	    return function(event) { 
+	    	$("#weightlabels"+i).html(Number(this.value).toFixed(1));
+	    };
+	}
 }
 
 function DisplayShared(n) {
@@ -90,7 +95,19 @@ function displayNodeValues(n1, n2) {
 	}
 }
 
+function resetWeights() {
+	for(var i = 0; i < weights.length; ++i) {
+		$("#weights"+i).val(weights[i]);
+		$("#weightlabels"+i).html(weights[i].toFixed(1));
+	}
+}
+
 function rebuildTree() {
+	//get weights
+	for(var i = 0; i < weights.length; ++i) {
+		weights[i] = $("#weights"+i).val();
+	}
+
 	root = process(data);
 	selectedNode = null;
 
@@ -111,6 +128,13 @@ function rebuildTree() {
 function initializeTree() {
 	// ************** Generate the tree diagram  *****************
 	// from example http://bl.ocks.org/mbostock/4339607
+
+	tooltip = d3.select("body")
+	    .append("div")
+	    .style("position", "absolute")
+	    .style("z-index", "10")
+	    .style("visibility", "hidden")
+	    .attr("class", "tooltip");
 
 	cluster = d3.layout.cluster()
 		.size([360, radius - 80])
@@ -133,6 +157,7 @@ function initializeTree() {
           "click": clickSvg, 
         });
 
+    //Create preview svg
     preview = svg.append("g")
 		.attr("transform", "translate(" + 85 + "," + 85 + "), scale(0.2)");
 
@@ -266,6 +291,7 @@ function updateTree(newRoot) {
 function clickNode(node) {
 	resetPathHighlighting();
 	selectedNode = null;
+	displayNodeValues(null, null);
 	updateTree(node);
 }
 
@@ -279,13 +305,13 @@ function clickLeaf(node) {
 		selectedNode = null;
 		resetPathHighlighting();
 		displayNodeValues(null, null);
-		document.getElementById("Distance").innerHTML = "";
+		tooltip.style("visibility", "hidden");
 	} else {
 		selectedNode = node;
 		selectedD3 = d3.select(this);
 		highlightPathSubsetWithColor(getAllParentNodes(node));
 		displayNodeValues(node, null);
-		document.getElementById("Distance").innerHTML = "";
+		tooltip.style("visibility", "hidden");
 	}	
 }
 
@@ -302,7 +328,10 @@ function hoverLeaf(node) {
 		highlightPathSubsetWithColor(getAllParentNodes(node), undefined, undefined, preview, 1);
 		displayNodeValues(node, null);
 	} else if(selectedNode != node) {
-		document.getElementById("Distance").innerHTML = "<em>Distance</em> : " + distance(node, selectedNode);
+		tooltip.style("visibility", "visible")
+			.style("top", (d3.event.pageY-10)+"px")
+			.style("left",(d3.event.pageX+10)+"px")
+		    .text("Distance: " + distance(node, selectedNode));
 		displayNodeValues(selectedNode, node);
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral", undefined, preview, 1);
@@ -315,8 +344,7 @@ function hoverLeaf(node) {
 function hoverOff(node) {
 	if(!canHover)
 		return;
-	document.getElementById("Distance").innerHTML = "";
-	document.getElementById("Node2").innerHTML = "";
+	tooltip.style("visibility", "hidden");
 
 	if(selectedNode == null) {
 		displayNodeValues(null, null);

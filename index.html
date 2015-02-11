@@ -2,13 +2,20 @@
 <html>
 		<title>Tree of Life</title>
 		<script src="./jquery-1.11.2.min.js"></script>
-		<script src="./rangeslider.min.js"></script>
 		<script src="./d3min.js" charset="utf-8"></script>
 		<script src="./zoo.js"></script>
 		<script src="./Main.js"></script>
 		<script src="./Cluster.js"></script>
 		<script src="./Main.js"></script>
 		  <style>
+
+		.tooltip {
+		  padding: 8px;
+		  background: rgba(0, 0, 0, 0.8);
+		  color: #FF4040;
+		  opacity: 80%;
+		  border-radius: 2px;
+		}
 
 		 .leaf circle {
 		   fill: #fff;
@@ -46,8 +53,9 @@
 		}
 
 		td {
-			min-width: 40px;
+			min-width: 55px;
 			padding: 2px;
+			text-align: center;
 		}
 
 		svg {
@@ -66,8 +74,6 @@
 		<svg/>
 		<br/>
 		<label id="Distance"></label><br/>
-		<label id="Node1"></label><br/>
-		<label id="Node2"></label><br/>
 		</div>
 		<div id="weightscontainer">
 		<tablie id="weights"/>
