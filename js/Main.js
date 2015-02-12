@@ -242,7 +242,7 @@ function hoverLeaf(node) {
 	} else if(selectedNode != node) {
 		tooltip.style("visibility", "visible")
 			.style("top", (d3.event.pageY-10)+"px")
-			.style("left",(d3.event.pageX+10)+"px")
+			.style("left",(d3.event.pageX+15)+"px")
 		    .text("Distance: " + distance(node, selectedNode).toFixed(2));
 		table.displayNodeValues(selectedNode, node);
 		highlightPathSubsetWithColor(getClosestConnection(node, selectedNode), "lightcoral");
